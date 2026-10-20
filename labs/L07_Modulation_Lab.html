@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modulation Lab · Lecture 7</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+:root{
+  --bench:#e9edf1; --panel:#f8f9fa; --ink:#1d2733; --muted:#55606c; --line:#cfd6dd;
+  --screen:#13293f; --grid:#22405c; --gridstrong:#2f5577; --trace:#f0a35e; --trace2:#9fc1e6; --navy:#16324f; --accent:#a64f15;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; } }
+:root[data-theme="dark"]{ --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bench);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;font-size:17px;line-height:1.5}
+header{max-width:1180px;margin:0 auto;padding:28px 20px 8px}
+h1{font-size:30px;line-height:1.2;margin:0 0 4px;font-weight:700;color:var(--navy)}
+header p{margin:0;color:var(--muted);max-width:70ch}
+nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+nav button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:4px 20px 40px}
+section.lab{display:none}
+section.lab.on{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+@media (max-width:880px){section.lab.on{grid-template-columns:1fr}}
+.screens{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scope{background:var(--screen);border-radius:14px;padding:10px 12px 8px;border:6px solid #0c1c2c}
+.scope .cap{display:flex;justify-content:space-between;color:#9fb4c9;font-size:14px;padding:0 4px 6px}
+canvas{display:block;width:100%;height:240px}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.ctrl h2{font-size:19px;margin:0;color:var(--navy)}
+.ctrl p.hint{margin:0;color:var(--muted);font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label span.val{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bench);color:var(--ink);width:100%}
+.readout{background:var(--bench);border-radius:10px;padding:12px 14px;font-size:15px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.readout b{font-weight:600}
+.readout code{font-family:'IBM Plex Mono',monospace;color:var(--accent);text-align:right}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bench);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.verdict{font-weight:700}
+.calcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;grid-column:1/-1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.calc h2{font-size:19px;margin:0;color:var(--navy)}
+.pair{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.result{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--accent)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+.dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
+.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar .slides{background:#a64f15;border-color:#c9752e}
+.dcbar .dis{opacity:.35;pointer-events:none}
+.dcbar .sp{flex:1}
+.dcbar select{max-width:260px}
+@media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L07.html#25">◀ Lecture 7 slides</a><span class="sp"></span><a class="wide" href="L06_Line_Coding_Lab.html">◀ Lab 6</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html" selected>Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html">Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L08_Analog_Modulation_Lab.html">Lab 8 ▶</a></div>
+<header>
+  <h1>Modulation Lab</h1>
+  <p>Data Communication, Lecture 7. Put bits on a carrier wave with ASK, FSK and PSK, build 4-QAM and 8-QAM signals step by step, and see why more points need a cleaner channel.</p>
+</header>
+<nav role="tablist" aria-label="Experiments">
+  <button role="tab" aria-selected="true" data-tab="sk">1. ASK, FSK, PSK</button>
+  <button role="tab" aria-selected="false" data-tab="qam">2. QAM step by step</button>
+  <button role="tab" aria-selected="false" data-tab="nz">3. Noise and constellations</button>
+</nav>
+<main>
+<section class="lab on" id="sk" role="tabpanel">
+  <div class="screens"><div class="scope"><div class="cap"><span>Bits (top) and modulated carriers · dashed lines = bit boundaries</span><span id="capSk"></span></div><canvas id="skC" style="height:520px"></canvas></div></div>
+  <div class="ctrl">
+    <h2>Change one property of the carrier</h2>
+    <label>Bits<input type="text" id="skB" value="10110010" maxlength="24"></label>
+    <label><div class="row">Carrier cycles per bit <span class="val" id="vCy"></span></div><input type="range" id="skCy" min="1" max="6" step="1" value="3"></label>
+    <p class="hint"><b>ASK</b>: 1 = carrier on, 0 = off (OOK). <b>BFSK</b>: 1 = higher frequency f₁, 0 = lower f₀. <b>BPSK</b>: 1 = phase 0°, 0 = phase 180°.</p>
+  </div>
+</section>
+<section class="lab" id="qam" role="tabpanel">
+  <div class="screens">
+    <div style="display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px">
+      <div class="scope"><div class="cap"><span>Constellation</span><span id="capCo"></span></div><canvas id="coC" style="height:300px"></canvas></div>
+      <div class="scope"><div class="cap"><span>Modulated signal, one symbol per segment</span><span id="capQw"></span></div><canvas id="qwC" style="height:300px"></canvas></div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;overflow-x:auto"><table id="qT" style="border-collapse:collapse;width:100%;font-size:15px;font-family:'IBM Plex Mono',monospace"></table></div>
+  </div>
+  <div class="ctrl">
+    <h2>Bits → groups → points → signal</h2>
+    <label>Scheme<select id="qS"><option value="4">4-QAM (QPSK): 2 bits per symbol</option><option value="8" selected>8-QAM: 3 bits per symbol</option><option value="16">16-QAM: 4 bits per symbol</option></select></label>
+    <label>Bits<input type="text" id="qB" value="100110110101100011011001000001" maxlength="48"></label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px"><button class="chip" data-p="100110110101100011011001000001">Example C (Lecture 5)</button><button class="chip" data-p="101100001000010011110111">Old-slide 8-QAM example</button><button class="chip" data-p="100110110101">12 bits (4-QAM example)</button></div>
+    <label><div class="row">Bit rate <span class="val" id="vBr"></span></div><input type="range" id="qR" min="1" max="48" step="1" value="3"></label>
+    <div class="readout"><b>Bits per symbol log₂L</b><code id="rBps"></code><b>Baud rate S = N / log₂L</b><code id="rBaud"></code><b>Bandwidth B = (1 + d)S, d = 0</b><code id="rBw"></code></div>
+    <p class="hint" id="qRule"></p>
+  </div>
+</section>
+<section class="lab" id="nz" role="tabpanel">
+  <div class="screens"><div class="scope"><div class="cap"><span>Received points with noise · grid lines = decision boundaries · orange = decided wrongly</span><span id="capNz"></span></div><canvas id="nzC" style="height:440px"></canvas></div></div>
+  <div class="ctrl">
+    <h2>How many points can the channel support?</h2>
+    <label>Constellation<select id="nM"><option value="4">4-QAM</option><option value="16" selected>16-QAM</option><option value="64">64-QAM</option></select></label>
+    <label><div class="row">SNR <span class="val" id="vNs"></span></div><input type="range" id="nS" min="0" max="35" step="1" value="18"></label>
+    <div class="readout"><b>Symbols sent</b><code>600</code><b>Symbol errors</b><code id="rSe"></code><b>Bits per symbol</b><code id="rNb"></code></div>
+    <p class="hint">Wi-Fi does exactly this: close to the router it uses many points (more bits per symbol); far away, where SNR is low, it falls back to fewer.</p>
+  </div>
+</section>
+</main>
+<footer>4-QAM labels follow Forouzan 5e (11 at 45°, Gray coded). 8-QAM follows the classic 2-amplitude, 4-phase constellation: first two bits pick the phase, the last bit the amplitude.</footer>
+<style>.chip{font:inherit;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bench);color:var(--ink);cursor:pointer}</style>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {grid:'#22405c', gridS:'#2f5577', t1:'#f0a35e', t2:'#9fc1e6', txt:'#9fb4c9', dim:'rgba(159,193,230,0.35)', pass:'rgba(240,163,94,0.16)'};
+
+function setup(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(10, Math.round(r.width*dpr)); cv.height = Math.round(r.height*dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+function grid(g,w,h,nx,ny){
+  g.clearRect(0,0,w,h); g.lineWidth=1;
+  for(let i=0;i<=nx;i++){g.strokeStyle=C.grid; g.beginPath(); const x=Math.round(i*w/nx)+0.5; g.moveTo(x,0); g.lineTo(x,h); g.stroke();}
+  for(let j=0;j<=ny;j++){g.strokeStyle=(j===ny/2)?C.gridS:C.grid; g.beginPath(); const y=Math.round(j*h/ny)+0.5; g.moveTo(0,y); g.lineTo(w,y); g.stroke();}
+}
+function trace(g,pts,color,width,dash){
+  g.strokeStyle=color; g.lineWidth=width; g.setLineDash(dash||[]); g.lineJoin='round'; g.beginPath();
+  pts.forEach((p,i)=> i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.stroke(); g.setLineDash([]);
+}
+function label(g,x,y,s,align){g.fillStyle=C.txt; g.font='13px "IBM Plex Mono", monospace'; g.textAlign=align||'center'; g.fillText(s,x,y);}
+function spikes(g,w,h,items,fmax,amax,color,band){
+  grid(g,w,h,12,4); const base=h-24;
+  if(band){ g.fillStyle=C.pass; g.fillRect(0,0,Math.min(w,band/fmax*w),base); }
+  g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,base+0.5); g.lineTo(w,base+0.5); g.stroke();
+  items.forEach(([f,a,c])=>{ if(f>fmax) return; const x=f/fmax*w; const y=base-(a/amax)*(base-16);
+    g.strokeStyle=c||color; g.lineWidth=5; g.beginPath(); g.moveTo(x,base); g.lineTo(x,y); g.stroke(); });
+  for(let k=0;k<=fmax;k+= (fmax>30?10:(fmax>12?5:2))) label(g,k/fmax*w,h-6,k+' Hz', k===0?'left':'center');
+}
+const fmt = (v,u) => { const a=Math.abs(v); const P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+  if(!isFinite(v)) return '∞'; if(a===0) return '0 '+u; for(const [s,p] of P){ if(a>=s*0.9999) return (+(v/s).toPrecision(4))+' '+p+u; } return v.toExponential(3)+' '+u; };
+
+
+const bitsOf=id=>($(id).value.match(/[01]/g)||['0']).join('');
+/* 1 ASK FSK PSK */
+function drawSk(){
+  const b=bitsOf('skB').slice(0,24), cy=+$('skCy').value, n=b.length; $('vCy').textContent=cy; $('capSk').textContent=n+' bits';
+  const {g,w,h}=setup($('skC')); g.clearRect(0,0,w,h); const x0=90,x1=w-10,bw=(x1-x0)/n;
+  g.font='600 15px "IBM Plex Mono", monospace'; g.textAlign='center'; for(let i=0;i<n;i++){g.fillStyle=C.t1; g.fillText(b[i],x0+(i+0.5)*bw,22);}
+  g.setLineDash([3,5]); g.strokeStyle='#2f5577'; for(let i=0;i<=n;i++){g.beginPath(); g.moveTo(x0+i*bw,30); g.lineTo(x0+i*bw,h-6); g.stroke();} g.setLineDash([]);
+  const rows=[['ASK',(i,u)=>(b[i]==='1'?1:0)*Math.sin(2*Math.PI*cy*u)],['BFSK',(i,u)=>Math.sin(2*Math.PI*(b[i]==='1'?cy*2:cy)*u)],['BPSK',(i,u)=>Math.sin(2*Math.PI*cy*u+(b[i]==='1'?0:Math.PI))]];
+  rows.forEach(([nm,fn],j)=>{const yc=40+(h-40)*(j+0.5)/3, ys=(h-40)/3*0.36; g.strokeStyle='#22405c'; g.beginPath(); g.moveTo(x0,yc); g.lineTo(x1,yc); g.stroke();
+    const p=[]; for(let i=0;i<n;i++) for(let k=0;k<=60;k++){const u=k/60; p.push([x0+(i+u)*bw, yc-fn(i,u)*ys]);} trace(g,p,j===1?C.t2:C.t1,2.5);
+    g.fillStyle='#f5f3ee'; g.font='600 16px "IBM Plex Sans", sans-serif'; g.textAlign='left'; g.fillText(nm,10,yc+5);});
+}
+['skB','skCy'].forEach(id=>$(id).addEventListener('input',drawSk));
+/* 2 QAM */
+const MAP={
+ 4:{k:2,f:s=>({I:s[0]==='1'?1:-1,Q:s[1]==='1'?1:-1}),rule:'4-QAM (Forouzan 5e QPSK): first bit = sign of I, second bit = sign of Q. 11→45°, 01→135°, 00→225°, 10→315°; amplitude √2.'},
+ 8:{k:3,f:s=>{const ph={'00':0,'01':90,'10':180,'11':270}[s.slice(0,2)], A=s[2]==='1'?2:1; return{I:A*Math.round(Math.cos(ph*Math.PI/180)),Q:A*Math.round(Math.sin(ph*Math.PI/180))};},rule:'8-QAM: first two bits choose the phase (00→0°, 01→90°, 10→180°, 11→270°); the last bit chooses the amplitude (0 → 1, 1 → 2).'},
+ 16:{k:4,f:s=>{const lv={'00':-3,'01':-1,'11':1,'10':3};return{I:lv[s.slice(0,2)],Q:lv[s.slice(2,4)]};},rule:'16-QAM (Gray): first two bits choose I, last two choose Q, from 00→−3, 01→−1, 11→+1, 10→+3.'}};
+let qSel=-1;
+function drawQam(){
+  const M=+$('qS').value, m=MAP[M]; let b=bitsOf('qB'); while(b.length%m.k) b+='0'; const groups=b.match(new RegExp('.{'+m.k+'}','g'));
+  const pts=groups.map(s=>{const p=m.f(s); return{s,...p,A:Math.hypot(p.I,p.Q),ph:((Math.atan2(p.Q,p.I)*180/Math.PI)+360)%360};});
+  const N=+$('qR').value; $('vBr').textContent=N+' kbps'; $('rBps').textContent=m.k; $('rBaud').textContent=fmt(N*1000/m.k,'baud'); $('rBw').textContent=fmt(N*1000/m.k,'Hz'); $('qRule').textContent=m.rule;
+  $('capCo').textContent=M+' points'; $('capQw').textContent=groups.length+' symbols × '+m.k+' bits';
+  let rows='<tr><th>k</th><th>bits</th><th>I</th><th>Q</th><th>amplitude</th><th>phase</th><th>signal element</th></tr>';
+  pts.forEach((p,k)=>{rows+=`<tr data-k="${k}" style="cursor:pointer"><td>${k}</td><td><b>${p.s}</b></td><td>${p.I>0?'+':''}${p.I}</td><td>${p.Q>0?'+':''}${p.Q}</td><td>${(+p.A.toFixed(3))}</td><td>${Math.round(p.ph)}°</td><td>${(+p.A.toFixed(2))}·cos(2πf<sub>c</sub>t + ${Math.round(p.ph)}°)</td></tr>`;});
+  $('qT').innerHTML=rows; $('qT').querySelectorAll('td,th').forEach(c=>{c.style.padding='4px 8px';c.style.borderBottom='1px solid var(--line)';c.style.textAlign='left';});
+  $('qT').querySelectorAll('tr[data-k]').forEach(r=>{r.addEventListener('click',()=>{qSel=+r.dataset.k; drawQam();}); if(+r.dataset.k===qSel) r.style.background='rgba(240,163,94,0.18)';});
+  // constellation
+  let {g,w,h}=setup($('coC')); g.clearRect(0,0,w,h); const R=Math.min(w,h)/2-30, cx=w/2, cy=h/2, mx=M===16?3.6:(M===8?2.4:1.6), sc=R/mx;
+  g.strokeStyle='#2f5577'; g.lineWidth=1.5; g.beginPath(); g.moveTo(cx-R,cy); g.lineTo(cx+R,cy); g.moveTo(cx,cy-R); g.lineTo(cx,cy+R); g.stroke(); label(g,cx+R-4,cy-6,'I','right'); label(g,cx+8,cy-R+12,'Q','left');
+  const all=[]; for(let v=0;v<M;v++){const s=v.toString(2).padStart(m.k,'0'); all.push({s,...m.f(s)});}
+  all.forEach(p=>{const x=cx+p.I*sc, y=cy-p.Q*sc, used=pts.some(q=>q.s===p.s); g.fillStyle=used?'#f0a35e':'#4a6f93'; g.beginPath(); g.arc(x,y,M===16?5:7,0,7); g.fill();
+    g.fillStyle='#f5f3ee'; g.font='600 '+(M===16?11:13)+'px "IBM Plex Mono", monospace'; g.textAlign='center'; g.fillText(p.s,x,y-(M===16?9:12));});
+  if(qSel>=0&&qSel<pts.length){const p=pts[qSel]; g.strokeStyle='#f5f3ee'; g.lineWidth=2; g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx+p.I*sc,cy-p.Q*sc); g.stroke(); g.beginPath(); g.arc(cx+p.I*sc,cy-p.Q*sc,12,0,7); g.stroke();}
+  // waveform
+  ({g,w,h}=setup($('qwC'))); g.clearRect(0,0,w,h); const n=pts.length, bw=(w-20)/n, Am=Math.max(...all.map(p=>Math.hypot(p.I,p.Q))), yc=h/2+10, ys=(h/2-40)/Am;
+  g.setLineDash([3,5]); g.strokeStyle='#2f5577'; for(let i=0;i<=n;i++){g.beginPath(); g.moveTo(10+i*bw,30); g.lineTo(10+i*bw,h-6); g.stroke();} g.setLineDash([]);
+  if(qSel>=0&&qSel<n){g.fillStyle='rgba(240,163,94,0.15)'; g.fillRect(10+qSel*bw,30,bw,h-36);}
+  const wp=[]; pts.forEach((p,i)=>{for(let k=0;k<=80;k++){const u=k/80; wp.push([10+(i+u)*bw, yc-p.A*Math.cos(2*Math.PI*2*u+p.ph*Math.PI/180)*ys]);}}); trace(g,wp,C.t1,2.5);
+  g.font='600 '+(n>12?11:14)+'px "IBM Plex Mono", monospace'; g.textAlign='center'; pts.forEach((p,i)=>{g.fillStyle=C.txt; g.fillText(p.s,10+(i+0.5)*bw,20);});
+}
+['qS','qB','qR'].forEach(id=>$(id).addEventListener('input',()=>{qSel=-1;drawQam();}));
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{$('qB').value=c.dataset.p; if(c.dataset.p.length===12) $('qS').value='4'; if(c.dataset.p.length===24) $('qS').value='8'; qSel=-1; drawQam();}));
+/* 3 noise */
+let sd=3; const rr=()=>{sd=(sd*1103515245+12345)%2147483648; return sd/2147483648;}; const ga=()=>{let u=rr()||1e-9,v=rr(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+function drawNz(){
+  const M=+$('nM').value, snr=+$('nS').value, side=Math.sqrt(M), lv=[]; for(let i=0;i<side;i++) lv.push(2*i-side+1);
+  const Es=lv.reduce((a,x)=>a+x*x,0)/side*2, sig=Math.sqrt(Es/Math.pow(10,snr/10)/2); $('vNs').textContent=snr+' dB'; $('rNb').textContent=Math.log2(M);
+  sd=3; let err=0; const {g,w,h}=setup($('nzC')); g.clearRect(0,0,w,h); const R=Math.min(w,h)/2-16, cx=w/2, cy=h/2, mx=side, sc=R/mx;
+  g.strokeStyle='#2f5577'; g.lineWidth=1; for(let i=-side/2+1;i<side/2;i++){g.beginPath(); g.moveTo(cx+i*2*sc,cy-R); g.lineTo(cx+i*2*sc,cy+R); g.moveTo(cx-R,cy+i*2*sc); g.lineTo(cx+R,cy+i*2*sc); g.stroke();}
+  for(let k=0;k<600;k++){const I=lv[Math.floor(rr()*side)], Q=lv[Math.floor(rr()*side)], rI=I+sig*ga(), rQ=Q+sig*ga();
+    const dec=v=>Math.max(-side+1,Math.min(side-1,2*Math.round((v+side-1)/2)-side+1)); const bad=dec(rI)!==I||dec(rQ)!==Q; if(bad) err++;
+    g.fillStyle=bad?'#f0a35e':'rgba(159,193,230,0.7)'; g.fillRect(cx+rI*sc-1.5,cy-rQ*sc-1.5,3,3);}
+  lv.forEach(I=>lv.forEach(Q=>{g.fillStyle='#f5f3ee'; g.beginPath(); g.arc(cx+I*sc,cy-Q*sc,3.5,0,7); g.fill();}));
+  $('rSe').textContent=err+' ('+(err/6).toFixed(1)+'%)'; $('capNz').textContent=M+'-QAM at '+snr+' dB';
+}
+['nM','nS'].forEach(id=>$(id).addEventListener('input',drawNz));
+const draws={sk:drawSk,qam:drawQam,nz:drawNz}; let current='sk';
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+  document.querySelectorAll('section.lab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab)); current=b.dataset.tab; draws[current]();}));
+const hash=location.hash.replace('#',''); if(draws[hash]) document.querySelector(`nav button[data-tab="${hash}"]`).click();
+window.addEventListener('resize',()=>draws[current]()); if(document.fonts) document.fonts.ready.then(()=>draws[current]()); draws[current]();
+</script>
+
+</body>
+</html>

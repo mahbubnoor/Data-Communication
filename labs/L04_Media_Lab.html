@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Media Lab · Lecture 4</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+:root{
+  --bench:#e9edf1; --panel:#f8f9fa; --ink:#1d2733; --muted:#55606c; --line:#cfd6dd;
+  --screen:#13293f; --grid:#22405c; --gridstrong:#2f5577; --trace:#f0a35e; --trace2:#9fc1e6; --navy:#16324f; --accent:#a64f15;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; } }
+:root[data-theme="dark"]{ --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bench);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;font-size:17px;line-height:1.5}
+header{max-width:1180px;margin:0 auto;padding:28px 20px 8px}
+h1{font-size:30px;line-height:1.2;margin:0 0 4px;font-weight:700;color:var(--navy)}
+header p{margin:0;color:var(--muted);max-width:70ch}
+nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+nav button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:4px 20px 40px}
+section.lab{display:none}
+section.lab.on{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+@media (max-width:880px){section.lab.on{grid-template-columns:1fr}}
+.screens{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scope{background:var(--screen);border-radius:14px;padding:10px 12px 8px;border:6px solid #0c1c2c}
+.scope .cap{display:flex;justify-content:space-between;color:#9fb4c9;font-size:14px;padding:0 4px 6px}
+canvas{display:block;width:100%;height:240px}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.ctrl h2{font-size:19px;margin:0;color:var(--navy)}
+.ctrl p.hint{margin:0;color:var(--muted);font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label span.val{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bench);color:var(--ink);width:100%}
+.readout{background:var(--bench);border-radius:10px;padding:12px 14px;font-size:15px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.readout b{font-weight:600}
+.readout code{font-family:'IBM Plex Mono',monospace;color:var(--accent);text-align:right}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bench);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.verdict{font-weight:700}
+.calcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;grid-column:1/-1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.calc h2{font-size:19px;margin:0;color:var(--navy)}
+.pair{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.result{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--accent)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+.dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
+.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar .slides{background:#a64f15;border-color:#c9752e}
+.dcbar .dis{opacity:.35;pointer-events:none}
+.dcbar .sp{flex:1}
+.dcbar select{max-width:260px}
+@media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L04.html#19">◀ Lecture 4 slides</a><span class="sp"></span><a class="wide" href="L03_Channel_Lab.html">◀ Lab 3</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html" selected>Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html">Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L05_PCM_Lab.html">Lab 5 ▶</a></div>
+<header>
+  <h1>Media Lab</h1>
+  <p>Data Communication, Lecture 4. Bend light inside a fibre, budget the losses of a cable, and explore the radio spectrum.</p>
+</header>
+<nav role="tablist" aria-label="Experiments">
+  <button role="tab" aria-selected="true" data-tab="tir">1. Light in a fibre</button>
+  <button role="tab" aria-selected="false" data-tab="bud">2. Link budget</button>
+  <button role="tab" aria-selected="false" data-tab="rf">3. Radio spectrum</button>
+</nav>
+<main>
+<section class="lab on" id="tir" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Core (bottom) and cladding (top) · ray hits the boundary</span><span id="capTir"></span></div><canvas id="tirC" style="height:380px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>Refract or reflect?</h2>
+    <label><div class="row">Core index n₁ <span class="val" id="vN1"></span></div><input type="range" id="tN1" min="1.40" max="1.60" step="0.01" value="1.48"></label>
+    <label><div class="row">Cladding index n₂ <span class="val" id="vN2"></span></div><input type="range" id="tN2" min="1.30" max="1.59" step="0.01" value="1.46"></label>
+    <label><div class="row">Angle of incidence θ₁ <span class="val" id="vA"></span></div><input type="range" id="tA" min="0" max="89" step="0.5" value="84"></label>
+    <div class="readout">
+      <b>Critical angle</b><code id="rC"></code>
+      <b>Refracted angle θ₂</b><code id="rR"></code>
+      <b>Numerical aperture</b><code id="rNA"></code>
+    </div>
+    <p class="verdict" id="tirV"></p>
+    <p class="hint">Snell: n₁ sin θ₁ = n₂ sin θ₂. Above the critical angle no refracted ray exists, so all the light reflects back into the core.</p>
+  </div>
+</section>
+
+<section class="lab" id="bud" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Received power along the link · dashed line = receiver sensitivity</span><span id="capBud"></span></div><canvas id="budC" style="height:340px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>Will the signal arrive strong enough?</h2>
+    <label>Medium<select id="bM">
+      <option value="0.2">Cat 6 twisted pair at 100 MHz (≈ 20 dB per 100 m)</option>
+      <option value="0.22">RG-6 coax at 1 GHz (≈ 22 dB per 100 m)</option>
+      <option value="0.003">Multimode fibre, 850 nm (≈ 3 dB/km)</option>
+      <option value="0.0002" selected>Single-mode fibre, 1550 nm (≈ 0.2 dB/km)</option>
+    </select></label>
+    <label>Distance (km)<input type="number" id="bD" value="80" min="0" step="any"></label>
+    <label><div class="row">Transmit power <span class="val" id="vTx"></span></div><input type="range" id="bTx" min="-10" max="20" step="1" value="0"></label>
+    <label><div class="row">Receiver sensitivity <span class="val" id="vRx"></span></div><input type="range" id="bRx" min="-40" max="-10" step="1" value="-28"></label>
+    <div class="readout">
+      <b>Total loss</b><code id="rLoss"></code>
+      <b>Received power</b><code id="rRxP"></code>
+      <b>Margin</b><code id="rMar"></code>
+      <b>Repeaters needed</b><code id="rRep"></code>
+    </div>
+    <p class="hint">Try 0.1 km on copper, then 0.1 km on fibre. Then stretch the fibre to 200 km.</p>
+  </div>
+</section>
+
+<section class="lab" id="rf" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Radio spectrum, 3 kHz to 300 GHz (logarithmic scale)</span><span id="capRf"></span></div><canvas id="rfC" style="height:220px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>What lives at this frequency?</h2>
+    <label><div class="row">Frequency <span class="val" id="vF"></span></div><input type="range" id="rF" min="0" max="1000" step="1" value="738"></label>
+    <div class="readout">
+      <b>Band</b><code id="rBand"></code>
+      <b>Propagation</b><code id="rProp"></code>
+      <b>Wavelength λ</b><code id="rLam"></code>
+      <b>λ/4 antenna</b><code id="rAnt"></code>
+    </div>
+    <p class="verdict" id="rUse"></p>
+    <p class="hint">Low frequencies travel far along the ground but carry little data. High frequencies carry a lot of data but need a clear line of sight.</p>
+  </div>
+</section>
+</main>
+<footer>Loss figures are typical values for teaching; real cables and fibres vary with frequency, grade and installation.</footer>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {grid:'#22405c', gridS:'#2f5577', t1:'#f0a35e', t2:'#9fc1e6', txt:'#9fb4c9', dim:'rgba(159,193,230,0.35)', pass:'rgba(240,163,94,0.16)'};
+
+function setup(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(10, Math.round(r.width*dpr)); cv.height = Math.round(r.height*dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+function grid(g,w,h,nx,ny){
+  g.clearRect(0,0,w,h); g.lineWidth=1;
+  for(let i=0;i<=nx;i++){g.strokeStyle=C.grid; g.beginPath(); const x=Math.round(i*w/nx)+0.5; g.moveTo(x,0); g.lineTo(x,h); g.stroke();}
+  for(let j=0;j<=ny;j++){g.strokeStyle=(j===ny/2)?C.gridS:C.grid; g.beginPath(); const y=Math.round(j*h/ny)+0.5; g.moveTo(0,y); g.lineTo(w,y); g.stroke();}
+}
+function trace(g,pts,color,width,dash){
+  g.strokeStyle=color; g.lineWidth=width; g.setLineDash(dash||[]); g.lineJoin='round'; g.beginPath();
+  pts.forEach((p,i)=> i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.stroke(); g.setLineDash([]);
+}
+function label(g,x,y,s,align){g.fillStyle=C.txt; g.font='13px "IBM Plex Mono", monospace'; g.textAlign=align||'center'; g.fillText(s,x,y);}
+function spikes(g,w,h,items,fmax,amax,color,band){
+  grid(g,w,h,12,4); const base=h-24;
+  if(band){ g.fillStyle=C.pass; g.fillRect(0,0,Math.min(w,band/fmax*w),base); }
+  g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,base+0.5); g.lineTo(w,base+0.5); g.stroke();
+  items.forEach(([f,a,c])=>{ if(f>fmax) return; const x=f/fmax*w; const y=base-(a/amax)*(base-16);
+    g.strokeStyle=c||color; g.lineWidth=5; g.beginPath(); g.moveTo(x,base); g.lineTo(x,y); g.stroke(); });
+  for(let k=0;k<=fmax;k+= (fmax>30?10:(fmax>12?5:2))) label(g,k/fmax*w,h-6,k+' Hz', k===0?'left':'center');
+}
+const fmt = (v,u) => { const a=Math.abs(v); const P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+  if(!isFinite(v)) return '∞'; if(a===0) return '0 '+u; for(const [s,p] of P){ if(a>=s*0.9999) return (+(v/s).toPrecision(4))+' '+p+u; } return v.toExponential(3)+' '+u; };
+
+
+/* 1. TIR */
+function drawTir(){
+  let n1=+$('tN1').value, n2=+$('tN2').value; if(n2>=n1){n2=+(n1-0.01).toFixed(2); $('tN2').value=n2;}
+  const a=+$('tA').value*Math.PI/180, crit=Math.asin(n2/n1), s2=n1*Math.sin(a)/n2;
+  $('vN1').textContent=n1.toFixed(2); $('vN2').textContent=n2.toFixed(2); $('vA').textContent=(+$('tA').value).toFixed(1)+'°';
+  $('rC').textContent=(crit*180/Math.PI).toFixed(1)+'°'; $('rNA').textContent=Math.sqrt(n1*n1-n2*n2).toFixed(3)+' (accept ±'+(Math.asin(Math.min(1,Math.sqrt(n1*n1-n2*n2)))*180/Math.PI).toFixed(1)+'° in air)';
+  const tir=s2>=1; $('rR').textContent=tir?'none (total internal reflection)':(Math.asin(s2)*180/Math.PI).toFixed(1)+'°';
+  const v=$('tirV'); v.textContent=tir?'Total internal reflection: the light stays in the core.':'Refraction: part of the light escapes into the cladding and is lost.'; v.style.color=tir?css('--navy'):css('--accent');
+  $('capTir').textContent='θc = '+(crit*180/Math.PI).toFixed(1)+'°';
+  const {g,w,h}=setup($('tirC')); g.clearRect(0,0,w,h);
+  g.fillStyle='#1b3a59'; g.fillRect(0,0,w,h/2); g.fillStyle='#13293f'; g.fillRect(0,h/2,w,h/2);
+  label(g,12,22,'cladding n₂','left'); label(g,12,h-12,'core n₁','left');
+  g.strokeStyle=C.gridS; g.lineWidth=2; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
+  const cx=w/2, cy=h/2, L=Math.min(w,h)*0.55;
+  g.setLineDash([5,6]); g.strokeStyle=C.txt; g.lineWidth=1; g.beginPath(); g.moveTo(cx,cy-L*0.8); g.lineTo(cx,cy+L*0.8); g.stroke(); g.setLineDash([]);
+  const ix=cx-L*Math.sin(a), iy=cy+L*Math.cos(a); trace(g,[[ix,iy],[cx,cy]],C.t1,4);
+  if(tir){ trace(g,[[cx,cy],[cx+L*Math.sin(a),cy+L*Math.cos(a)]],C.t1,4); }
+  else { const b=Math.asin(s2); trace(g,[[cx,cy],[cx+L*Math.sin(b),cy-L*Math.cos(b)]],C.t2,4);
+    const rr=Math.pow((Math.cos(a)-Math.sqrt(Math.max(0,(n2/n1)**2-Math.sin(a)**2)))/(Math.cos(a)+Math.sqrt(Math.max(0,(n2/n1)**2-Math.sin(a)**2))),2);
+    g.globalAlpha=Math.max(0.15,Math.min(1,rr*3)); trace(g,[[cx,cy],[cx+L*Math.sin(a),cy+L*Math.cos(a)]],C.t1,3); g.globalAlpha=1; }
+  g.strokeStyle=C.t1; g.lineWidth=2; g.beginPath(); g.arc(cx,cy,46,Math.PI/2,Math.PI/2+a); g.stroke(); label(g,cx-20,cy+70,'θ₁');
+}
+['tN1','tN2','tA'].forEach(id=>$(id).addEventListener('input',drawTir));
+/* 2. budget */
+function drawBud(){
+  const k=+$('bM').value, D=Math.max(0,+$('bD').value||0), tx=+$('bTx').value, rx=+$('bRx').value; // k in dB per metre
+  $('vTx').textContent=tx+' dBm'; $('vRx').textContent=rx+' dBm';
+  const loss=k*D*1000, rp=tx-loss, mar=rp-rx, span=(tx-rx)/k/1000, reps=mar>=0?0:Math.ceil(D/span)-1;
+  $('rLoss').textContent=loss.toFixed(1)+' dB'; $('rRxP').textContent=rp.toFixed(1)+' dBm'; $('rMar').textContent=(mar>=0?'+':'')+mar.toFixed(1)+' dB';
+  $('rRep').textContent=reps<=0?'none':reps+' (one every '+fmt(span*1000,'m')+')'; $('capBud').textContent='max span ≈ '+fmt(span*1000,'m');
+  const {g,w,h}=setup($('budC')); grid(g,w,h,10,4); const top=Math.max(tx,0)+5, bot=Math.min(rx,rp)-10, Y=v=>(top-v)/(top-bot)*(h-30)+10;
+  trace(g,[[0,Y(tx)],[w,Y(rp)]],C.t1,4); g.setLineDash([6,6]); trace(g,[[0,Y(rx)],[w,Y(rx)]],C.t2,2); g.setLineDash([]);
+  label(g,8,Y(tx)-8,tx+' dBm','left'); label(g,w-8,Y(rp)-8,rp.toFixed(1)+' dBm','right'); label(g,w/2,h-6,'0 → '+D+' km');
+}
+['bM','bD','bTx','bRx'].forEach(id=>$(id).addEventListener('input',drawBud));
+/* 3. RF */
+const bands=[[3e3,3e4,'VLF','Ground wave','Long-range navigation, submarine signalling'],[3e4,3e5,'LF','Ground wave','Radio beacons, navigation'],
+ [3e5,3e6,'MF','Ground wave (sky at night)','AM radio'],[3e6,3e7,'HF','Sky wave (ionosphere)','Shortwave radio, amateur radio, ship and aircraft'],
+ [3e7,3e8,'VHF','Line of sight (and sky)','FM radio, VHF television'],[3e8,3e9,'UHF','Line of sight','UHF television, mobile phones, Wi-Fi 2.4 GHz, GPS'],
+ [3e9,3e10,'SHF','Line of sight','Wi-Fi 5 GHz, satellite links, microwave relay'],[3e10,3e11,'EHF','Line of sight','Radar, 5G millimetre wave, satellite']];
+function drawRf(){
+  const f=3e3*Math.pow(1e8,+$('rF').value/1000), b=bands.find(x=>f>=x[0]&&f<x[1])||bands[bands.length-1];
+  $('vF').textContent=fmt(f,'Hz'); $('rBand').textContent=b[2]; $('rProp').textContent=b[3]; $('rLam').textContent=fmt(3e8/f,'m'); $('rAnt').textContent=fmt(3e8/f/4,'m');
+  $('rUse').textContent='Used for: '+b[4]; $('rUse').style.color=css('--navy'); $('capRf').textContent=b[2]+' · '+fmt(b[0],'Hz')+' to '+fmt(b[1],'Hz');
+  const {g,w,h}=setup($('rfC')); g.clearRect(0,0,w,h); const X=fr=>Math.log10(fr/3e3)/8*w;
+  bands.forEach((x,i)=>{ g.fillStyle=x===b?C.t1:(i%2?'#22405c':'#1b3a59'); g.fillRect(X(x[0]),40,X(x[1])-X(x[0]),110);
+    g.fillStyle=x===b?'#13293f':C.txt; g.font='600 15px "IBM Plex Sans", sans-serif'; g.textAlign='center'; g.fillText(x[2],(X(x[0])+X(x[1]))/2,100); });
+  g.strokeStyle='#f5f3ee'; g.lineWidth=3; g.beginPath(); g.moveTo(X(f),28); g.lineTo(X(f),162); g.stroke();
+  ['3 kHz','300 kHz','30 MHz','3 GHz','300 GHz'].forEach((s,i)=>label(g,i*w/4,190,s,i===0?'left':(i===4?'right':'center')));
+}
+$('rF').addEventListener('input',drawRf);
+const draws={tir:drawTir, bud:drawBud, rf:drawRf}; let current='tir';
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+  document.querySelectorAll('section.lab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab)); current=b.dataset.tab; draws[current]();}));
+const hash=location.hash.replace('#',''); if(draws[hash]) document.querySelector(`nav button[data-tab="${hash}"]`).click();
+window.addEventListener('resize',()=>draws[current]()); if(document.fonts) document.fonts.ready.then(()=>draws[current]()); draws[current]();
+</script>
+
+</body>
+</html>

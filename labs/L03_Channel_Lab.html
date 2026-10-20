@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Channel Lab · Lecture 3</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+:root{
+  --bench:#e9edf1; --panel:#f8f9fa; --ink:#1d2733; --muted:#55606c; --line:#cfd6dd;
+  --screen:#13293f; --grid:#22405c; --gridstrong:#2f5577; --trace:#f0a35e; --trace2:#9fc1e6; --navy:#16324f; --accent:#a64f15;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; } }
+:root[data-theme="dark"]{ --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bench);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;font-size:17px;line-height:1.5}
+header{max-width:1180px;margin:0 auto;padding:28px 20px 8px}
+h1{font-size:30px;line-height:1.2;margin:0 0 4px;font-weight:700;color:var(--navy)}
+header p{margin:0;color:var(--muted);max-width:70ch}
+nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+nav button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:4px 20px 40px}
+section.lab{display:none}
+section.lab.on{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+@media (max-width:880px){section.lab.on{grid-template-columns:1fr}}
+.screens{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scope{background:var(--screen);border-radius:14px;padding:10px 12px 8px;border:6px solid #0c1c2c}
+.scope .cap{display:flex;justify-content:space-between;color:#9fb4c9;font-size:14px;padding:0 4px 6px}
+canvas{display:block;width:100%;height:240px}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.ctrl h2{font-size:19px;margin:0;color:var(--navy)}
+.ctrl p.hint{margin:0;color:var(--muted);font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label span.val{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bench);color:var(--ink);width:100%}
+.readout{background:var(--bench);border-radius:10px;padding:12px 14px;font-size:15px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.readout b{font-weight:600}
+.readout code{font-family:'IBM Plex Mono',monospace;color:var(--accent);text-align:right}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bench);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.verdict{font-weight:700}
+.calcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;grid-column:1/-1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.calc h2{font-size:19px;margin:0;color:var(--navy)}
+.pair{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.result{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--accent)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+.dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
+.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar .slides{background:#a64f15;border-color:#c9752e}
+.dcbar .dis{opacity:.35;pointer-events:none}
+.dcbar .sp{flex:1}
+.dcbar select{max-width:260px}
+@media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L03.html#28">◀ Lecture 3 slides</a><span class="sp"></span><a class="wide" href="L02_Signal_Lab.html">◀ Lab 2</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html" selected>Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html">Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L04_Media_Lab.html">Lab 4 ▶</a></div>
+<header>
+  <h1>Channel Lab</h1>
+  <p>Data Communication, Lecture 3. Real channels weaken signals, add noise and take time. Change the numbers and watch what happens.</p>
+</header>
+<nav role="tablist" aria-label="Experiments">
+  <button role="tab" aria-selected="true" data-tab="db">1. Decibel chain</button>
+  <button role="tab" aria-selected="false" data-tab="noise">2. Noise and SNR</button>
+  <button role="tab" aria-selected="false" data-tab="cap">3. Channel capacity</button>
+  <button role="tab" aria-selected="false" data-tab="lat">4. Latency</button>
+</nav>
+<main>
+<section class="lab on" id="db" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Power along the link · bars in mW</span><span id="capDb"></span></div><canvas id="dbC" style="height:320px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>Add up the gains and losses</h2>
+    <label>Input power P₁ (mW)<input type="number" id="dbP" value="2" min="0.001" step="any"></label>
+    <label><div class="row">Cable 1 <span class="val" id="vS1"></span></div><input type="range" id="dS1" min="-20" max="0" step="0.5" value="-3"></label>
+    <label><div class="row">Amplifier <span class="val" id="vS2"></span></div><input type="range" id="dS2" min="0" max="30" step="0.5" value="7"></label>
+    <label><div class="row">Cable 2 <span class="val" id="vS3"></span></div><input type="range" id="dS3" min="-20" max="0" step="0.5" value="-3"></label>
+    <div class="readout">
+      <b>Total gain</b><code id="rTot"></code>
+      <b>Output power P₂</b><code id="rOut"></code>
+      <b>Output in dBm</b><code id="rDbm"></code>
+    </div>
+    <p class="hint">Decibels add: the total is just the sum of the three stages. Powers multiply: P₂ = P₁ × 10^(total/10).</p>
+  </div>
+</section>
+
+<section class="lab" id="noise" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Received signal = sent bits + noise · dashed line = decision threshold</span><span id="capSnr"></span></div><canvas id="nzC"></canvas></div>
+    <div class="scope"><div class="cap"><span>Bits the receiver decides · orange = wrong</span><span id="capErr"></span></div><canvas id="bitC" style="height:90px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>How much noise can the bits survive?</h2>
+    <label><div class="row">SNR <span class="val" id="vSnr"></span></div><input type="range" id="sSnr" min="-6" max="30" step="1" value="20"></label>
+    <button id="reroll" style="font:inherit;font-weight:600;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bench);color:var(--ink);cursor:pointer">New noise sample</button>
+    <div class="readout">
+      <b>SNR as a ratio</b><code id="rRatio"></code>
+      <b>Bits in error</b><code id="rBer"></code>
+    </div>
+    <p class="hint">SNR_dB = 10 log₁₀(signal power / noise power). Every 10 dB down means ten times more noise relative to the signal.</p>
+  </div>
+</section>
+
+<section class="lab" id="cap" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Maximum data rate · Nyquist (blue, noiseless) vs Shannon (orange, the real limit)</span><span id="capCap"></span></div><canvas id="capC" style="height:320px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>How fast can this channel go?</h2>
+    <label><div class="row">Bandwidth B <span class="val" id="vB"></span></div><input type="range" id="cB" min="1" max="100" step="1" value="3"></label>
+    <label>Bandwidth unit<select id="cBU"><option value="1e3" selected>kHz</option><option value="1e6">MHz</option></select></label>
+    <label><div class="row">Signal levels L <span class="val" id="vL"></span></div><input type="range" id="cL" min="1" max="10" step="1" value="1"></label>
+    <label><div class="row">SNR <span class="val" id="vS"></span></div><input type="range" id="cS" min="0" max="60" step="1" value="35"></label>
+    <div class="readout">
+      <b>Nyquist 2B log₂L</b><code id="rNy"></code>
+      <b>Shannon B log₂(1+SNR)</b><code id="rSh"></code>
+      <b>Useful levels at this SNR</b><code id="rLv"></code>
+    </div>
+    <p class="verdict" id="capVerdict"></p>
+  </div>
+</section>
+
+<section class="lab" id="lat" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Where the time goes · one message, end to end</span><span id="capLat"></span></div><canvas id="latC" style="height:260px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>Latency = propagation + transmission + queuing + processing</h2>
+    <label>Distance (km)<input type="number" id="lD" value="12000" min="0" step="any"></label>
+    <label>Medium<select id="lV"><option value="2e8">Copper or fibre (≈ 2 × 10⁸ m/s)</option><option value="3e8">Air or vacuum (3 × 10⁸ m/s)</option></select></label>
+    <label>Message size (kB)<input type="number" id="lM" value="2.5" min="0" step="any"></label>
+    <label>Bandwidth (Mbps)<input type="number" id="lB" value="1000" min="0.001" step="any"></label>
+    <label>Queuing + processing (ms)<input type="number" id="lQ" value="2" min="0" step="any"></label>
+    <div class="readout">
+      <b>Propagation</b><code id="rP"></code>
+      <b>Transmission</b><code id="rT"></code>
+      <b>Total latency</b><code id="rL"></code>
+      <b>Bandwidth × delay</b><code id="rBdp"></code>
+    </div>
+    <p class="hint">Try a 5,000 kB file at 1 Mbps: transmission time takes over. For a short message, distance dominates.</p>
+  </div>
+</section>
+</main>
+<footer>Simplified models for learning: real channels combine all these effects at once.</footer>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {grid:'#22405c', gridS:'#2f5577', t1:'#f0a35e', t2:'#9fc1e6', txt:'#9fb4c9', dim:'rgba(159,193,230,0.35)', pass:'rgba(240,163,94,0.16)'};
+
+function setup(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(10, Math.round(r.width*dpr)); cv.height = Math.round(r.height*dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+function grid(g,w,h,nx,ny){
+  g.clearRect(0,0,w,h); g.lineWidth=1;
+  for(let i=0;i<=nx;i++){g.strokeStyle=C.grid; g.beginPath(); const x=Math.round(i*w/nx)+0.5; g.moveTo(x,0); g.lineTo(x,h); g.stroke();}
+  for(let j=0;j<=ny;j++){g.strokeStyle=(j===ny/2)?C.gridS:C.grid; g.beginPath(); const y=Math.round(j*h/ny)+0.5; g.moveTo(0,y); g.lineTo(w,y); g.stroke();}
+}
+function trace(g,pts,color,width,dash){
+  g.strokeStyle=color; g.lineWidth=width; g.setLineDash(dash||[]); g.lineJoin='round'; g.beginPath();
+  pts.forEach((p,i)=> i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.stroke(); g.setLineDash([]);
+}
+function label(g,x,y,s,align){g.fillStyle=C.txt; g.font='13px "IBM Plex Mono", monospace'; g.textAlign=align||'center'; g.fillText(s,x,y);}
+function spikes(g,w,h,items,fmax,amax,color,band){
+  grid(g,w,h,12,4); const base=h-24;
+  if(band){ g.fillStyle=C.pass; g.fillRect(0,0,Math.min(w,band/fmax*w),base); }
+  g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,base+0.5); g.lineTo(w,base+0.5); g.stroke();
+  items.forEach(([f,a,c])=>{ if(f>fmax) return; const x=f/fmax*w; const y=base-(a/amax)*(base-16);
+    g.strokeStyle=c||color; g.lineWidth=5; g.beginPath(); g.moveTo(x,base); g.lineTo(x,y); g.stroke(); });
+  for(let k=0;k<=fmax;k+= (fmax>30?10:(fmax>12?5:2))) label(g,k/fmax*w,h-6,k+' Hz', k===0?'left':'center');
+}
+const fmt = (v,u) => { const a=Math.abs(v); const P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+  if(!isFinite(v)) return '∞'; if(a===0) return '0 '+u; for(const [s,p] of P){ if(a>=s*0.9999) return (+(v/s).toPrecision(4))+' '+p+u; } return v.toExponential(3)+' '+u; };
+
+
+/* 1. dB chain */
+function drawDb(){
+  const P1=Math.max(+$('dbP').value||0,1e-6), s=[+$('dS1').value,+$('dS2').value,+$('dS3').value];
+  $('vS1').textContent=s[0]+' dB'; $('vS2').textContent='+'+s[1]+' dB'; $('vS3').textContent=s[2]+' dB';
+  const tot=s[0]+s[1]+s[2], pts=[P1]; s.forEach(x=>pts.push(pts[pts.length-1]*Math.pow(10,x/10)));
+  $('rTot').textContent=(tot>0?'+':'')+tot.toFixed(1)+' dB'; $('rOut').textContent=fmt(pts[3]/1000,'W');
+  $('rDbm').textContent=(10*Math.log10(pts[3])).toFixed(2)+' dBm'; $('capDb').textContent='P₁ = '+fmt(P1/1000,'W');
+  const {g,w,h}=setup($('dbC')); grid(g,w,h,8,4); const mx=Math.max(...pts)*1.15, names=['Point 1','Point 2','Point 3','Point 4'];
+  const bw=w/8; pts.forEach((p,i)=>{const x=bw*(1+2*i), hh=(p/mx)*(h-60); g.fillStyle=i===0?C.t2:C.t1; g.fillRect(x-bw*0.4,h-30-hh,bw*0.8,hh);
+    label(g,x,h-10,names[i]); label(g,x,h-38-hh,fmt(p/1000,'W'));});
+  for(let i=0;i<3;i++){ const x=bw*(2+2*i); g.fillStyle=s[i]<0?C.t1:C.t2; g.font='600 15px "IBM Plex Mono", monospace'; g.textAlign='center'; g.fillText((s[i]>0?'+':'')+s[i]+' dB',x,26);}
+}
+['dbP','dS1','dS2','dS3'].forEach(id=>$(id).addEventListener('input',drawDb));
+/* 2. noise */
+let seed=7; function rnd(){seed=(seed*1103515245+12345)%2147483648; return seed/2147483648;}
+function gauss(){let u=0,v=0;while(u===0)u=rnd();v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+let noiseBase=[]; const NB=32, SPB=24; function reroll(){seed=Math.floor(Math.random()*1e6)+1; noiseBase=[]; for(let i=0;i<NB*SPB;i++) noiseBase.push(gauss()); drawNoise();}
+const bits=[1,0,1,1,0,0,1,0,1,1,1,0,0,1,0,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,1,0];
+function drawNoise(){
+  const snr=+$('sSnr').value, ratio=Math.pow(10,snr/10), sigma=Math.sqrt(1/ratio); // signal power 1 (levels ±1)
+  $('vSnr').textContent=snr+' dB'; $('rRatio').textContent=ratio>=10?Math.round(ratio).toLocaleString():ratio.toFixed(2); $('capSnr').textContent='SNR = '+snr+' dB';
+  let {g,w,h}=setup($('nzC')); grid(g,w,h,NB/2,4); const sc=v=>h/2-v*(h/2-14)/2.6, dec=[]; const pts=[];
+  for(let i=0;i<NB*SPB;i++){ const b=bits[Math.floor(i/SPB)]?1:-1; pts.push([i/(NB*SPB)*w, sc(b+sigma*noiseBase[i])]); }
+  trace(g,pts,C.t1,1.6);
+  const clean=[]; for(let i=0;i<NB;i++){const y=sc(bits[i]?1:-1); clean.push([i/NB*w,y]); clean.push([(i+1)/NB*w,y]);} trace(g,clean,C.t2,2);
+  g.setLineDash([4,6]); g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke(); g.setLineDash([]);
+  let err=0; for(let i=0;i<NB;i++){ const s=(bits[i]?1:-1)+sigma*noiseBase[i*SPB+Math.floor(SPB/2)]; const d=s>0?1:0; dec.push(d); if(d!==bits[i]) err++; }
+  $('rBer').textContent=err+' of '+NB; $('capErr').textContent=err?err+' errors':'no errors';
+  ({g,w,h}=setup($('bitC'))); g.clearRect(0,0,w,h);
+  for(let i=0;i<NB;i++){ g.fillStyle=dec[i]!==bits[i]?C.t1:C.txt; g.font='600 18px "IBM Plex Mono", monospace'; g.textAlign='center'; g.fillText(dec[i],(i+0.5)/NB*w,h/2+6); }
+}
+$('sSnr').addEventListener('input',drawNoise); $('reroll').addEventListener('click',reroll);
+/* 3. capacity */
+function drawCap(){
+  const Bu=+$('cBU').value, B=+$('cB').value*Bu, L=Math.pow(2,+$('cL').value), sdb=+$('cS').value, snr=Math.pow(10,sdb/10);
+  $('vB').textContent=$('cB').value+' '+$('cBU').selectedOptions[0].text; $('vL').textContent=L+' ('+$('cL').value+' bit'+($('cL').value>1?'s':'')+'/level)'; $('vS').textContent=sdb+' dB';
+  const ny=2*B*Math.log2(L), sh=B*Math.log2(1+snr), lv=Math.sqrt(1+snr);
+  $('rNy').textContent=fmt(ny,'bps'); $('rSh').textContent=fmt(sh,'bps'); $('rLv').textContent='≈ '+(lv<1000?lv.toFixed(1):Math.round(lv).toLocaleString());
+  const v=$('capVerdict'); v.textContent = ny<=sh ? 'Possible: the Nyquist rate is below the Shannon limit.' : 'Impossible in practice: noise will cause errors at this many levels. Use fewer levels.';
+  v.style.color = ny<=sh ? css('--navy') : css('--accent'); $('capCap').textContent='B = '+fmt(B,'Hz')+' · SNR = '+sdb+' dB';
+  const {g,w,h}=setup($('capC')); grid(g,w,h,10,4); const mx=Math.max(ny,sh)*1.2, bw=w/5;
+  [[ny,C.t2,'Nyquist'],[sh,C.t1,'Shannon']].forEach(([val,col,nm],i)=>{const x=bw*(1.5+2*i), hh=val/mx*(h-60); g.fillStyle=col; g.fillRect(x-bw*0.45,h-30-hh,bw*0.9,hh); label(g,x,h-10,nm); label(g,x,h-38-hh,fmt(val,'bps'));});
+}
+['cB','cBU','cL','cS'].forEach(id=>$(id).addEventListener('input',drawCap));
+/* 4. latency */
+function drawLat(){
+  const d=(+$('lD').value||0)*1000, v=+$('lV').value, m=(+$('lM').value||0)*8000, bw=Math.max(+$('lB').value||0,1e-6)*1e6, q=(+$('lQ').value||0)/1000;
+  const tp=d/v, tt=m/bw, tot=tp+tt+q; $('rP').textContent=fmt(tp,'s'); $('rT').textContent=fmt(tt,'s'); $('rL').textContent=fmt(tot,'s');
+  $('rBdp').textContent=fmt(bw*tp,'bits'); $('capLat').textContent='total '+fmt(tot,'s');
+  const {g,w,h}=setup($('latC')); grid(g,w,h,10,4); const parts=[[tp,C.t2,'propagation'],[tt,C.t1,'transmission'],[q,'#7f8fa3','queuing + processing']];
+  let x=10; const W=w-20; parts.forEach(([t,col,nm])=>{const ww=tot>0?t/tot*W:0; g.fillStyle=col; g.fillRect(x,h/2-40,ww,80); if(ww>90){g.fillStyle='#13293f'; g.font='600 14px "IBM Plex Sans", sans-serif'; g.textAlign='center'; g.fillText(nm,x+ww/2,h/2-4); g.fillText(fmt(t,'s'),x+ww/2,h/2+16);} x+=ww;});
+  label(g,10,h-12,'0 s','left'); label(g,w-10,h-12,fmt(tot,'s'),'right');
+}
+['lD','lV','lM','lB','lQ'].forEach(id=>$(id).addEventListener('input',drawLat));
+/* tabs */
+const draws={db:drawDb, noise:drawNoise, cap:drawCap, lat:drawLat}; let current='db';
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+  document.querySelectorAll('section.lab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab)); current=b.dataset.tab; draws[current]();}));
+const hash=location.hash.replace('#',''); if(draws[hash]) document.querySelector(`nav button[data-tab="${hash}"]`).click();
+window.addEventListener('resize',()=>draws[current]()); if(document.fonts) document.fonts.ready.then(()=>draws[current]());
+seed=7; for(let i=0;i<NB*SPB;i++) noiseBase.push(gauss()); draws[current]();
+</script>
+
+</body>
+</html>

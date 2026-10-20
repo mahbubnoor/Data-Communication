@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Line Coding Lab · Lecture 6</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+:root{
+  --bench:#e9edf1; --panel:#f8f9fa; --ink:#1d2733; --muted:#55606c; --line:#cfd6dd;
+  --screen:#13293f; --grid:#22405c; --gridstrong:#2f5577; --trace:#f0a35e; --trace2:#9fc1e6; --navy:#16324f; --accent:#a64f15;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; } }
+:root[data-theme="dark"]{ --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bench);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;font-size:17px;line-height:1.5}
+header{max-width:1180px;margin:0 auto;padding:28px 20px 8px}
+h1{font-size:30px;line-height:1.2;margin:0 0 4px;font-weight:700;color:var(--navy)}
+header p{margin:0;color:var(--muted);max-width:70ch}
+nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+nav button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:4px 20px 40px}
+section.lab{display:none}
+section.lab.on{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+@media (max-width:880px){section.lab.on{grid-template-columns:1fr}}
+.screens{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scope{background:var(--screen);border-radius:14px;padding:10px 12px 8px;border:6px solid #0c1c2c}
+.scope .cap{display:flex;justify-content:space-between;color:#9fb4c9;font-size:14px;padding:0 4px 6px}
+canvas{display:block;width:100%;height:240px}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.ctrl h2{font-size:19px;margin:0;color:var(--navy)}
+.ctrl p.hint{margin:0;color:var(--muted);font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label span.val{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bench);color:var(--ink);width:100%}
+.readout{background:var(--bench);border-radius:10px;padding:12px 14px;font-size:15px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.readout b{font-weight:600}
+.readout code{font-family:'IBM Plex Mono',monospace;color:var(--accent);text-align:right}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bench);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.verdict{font-weight:700}
+.calcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;grid-column:1/-1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.calc h2{font-size:19px;margin:0;color:var(--navy)}
+.pair{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.result{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--accent)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+.dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
+.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar .slides{background:#a64f15;border-color:#c9752e}
+.dcbar .dis{opacity:.35;pointer-events:none}
+.dcbar .sp{flex:1}
+.dcbar select{max-width:260px}
+@media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L06.html#21">◀ Lecture 6 slides</a><span class="sp"></span><a class="wide" href="L05_PCM_Lab.html">◀ Lab 5</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html" selected>Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html">Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L07_Modulation_Lab.html">Lab 7 ▶</a></div>
+<header>
+  <h1>Line Coding Lab</h1>
+  <p>Data Communication, Lecture 6. Type any bits and see them as a signal on the wire, under every line code, block code and scrambling rule from the lecture.</p>
+</header>
+<nav role="tablist" aria-label="Experiments">
+  <button role="tab" aria-selected="true" data-tab="lc">1. Line codes</button>
+  <button role="tab" aria-selected="false" data-tab="bk">2. 4B/5B block coding</button>
+  <button role="tab" aria-selected="false" data-tab="sc">3. Scrambling (B8ZS, HDB3)</button>
+</nav>
+<main>
+<section class="lab on" id="lc" role="tabpanel">
+  <div class="screens"><div class="scope"><div class="cap"><span>Each row: the same bits under a different line code · dashed lines = bit boundaries</span><span id="capLc"></span></div><canvas id="lcC" style="height:560px"></canvas></div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;overflow-x:auto"><table id="lcT" style="border-collapse:collapse;width:100%;font-size:15px"></table></div></div>
+  <div class="ctrl">
+    <h2>Encode your bits</h2>
+    <label>Bits<input type="text" id="lcB" value="01001110" maxlength="40"></label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <button class="chip" data-p="01001110">01001110 (book)</button><button class="chip" data-p="010101111111110010001010010">Fig. 4.26 bits</button>
+      <button class="chip" data-p="0000000000">all 0s</button><button class="chip" data-p="1111111111">all 1s</button></div>
+    <div id="lcChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:15px"></div>
+    <p class="hint">Conventions follow Forouzan: NRZ-L 0 = high; Manchester 0 = high→low; differential Manchester inverts at the start of a 0; AMI alternates the 1s; 2B1Q 00=−3, 01=−1, 10=+3, 11=+1.</p>
+  </div>
+</section>
+<section class="lab" id="bk" role="tabpanel">
+  <div class="screens"><div class="scope"><div class="cap"><span>Top: data in NRZ-I · bottom: after 4B/5B, in NRZ-I</span><span id="capBk"></span></div><canvas id="bkC" style="height:300px"></canvas></div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;overflow-x:auto"><table id="bkT" style="border-collapse:collapse;width:100%;font-size:15px;font-family:'IBM Plex Mono',monospace"></table></div></div>
+  <div class="ctrl">
+    <h2>4 bits in, 5 bits out</h2>
+    <label>Data bits (multiple of 4)<input type="text" id="bkB" value="1101000000000001" maxlength="40"></label>
+    <div class="readout"><b>Longest run of 0s before</b><code id="rZ0"></code><b>Longest run of 0s after</b><code id="rZ1"></code><b>Overhead</b><code>25% (5 bits per 4)</code></div>
+    <p class="hint">No 5-bit code has more than one leading 0 or more than two trailing 0s, so the coded stream never has more than three 0s in a row. NRZ-I then always has a transition at least every 4 bits.</p>
+  </div>
+</section>
+<section class="lab" id="sc" role="tabpanel">
+  <div class="screens"><div class="scope"><div class="cap"><span>AMI (top), B8ZS (middle), HDB3 (bottom) · orange marks = V (violation) and B (bipolar) pulses</span><span></span></div><canvas id="scC" style="height:420px"></canvas></div></div>
+  <div class="ctrl">
+    <h2>Replace long runs of 0s</h2>
+    <label>Bits<input type="text" id="scB" value="1100000000110000010" maxlength="40"></label>
+    <p class="hint"><b>B8ZS</b>: eight 0s become 000VB0VB. <b>HDB3</b>: four 0s become 000V if the number of 1s since the last substitution is odd, or B00V if it is even. V repeats the previous pulse's polarity, breaking the AMI rule on purpose so the receiver can spot and undo it.</p>
+  </div>
+</section>
+</main>
+<footer>Initial levels: NRZ-I and differential Manchester start from a high line; AMI's first 1 is positive; MLT-3 starts at 0.</footer>
+<style>.chip{font:inherit;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bench);color:var(--ink);cursor:pointer}</style>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {grid:'#22405c', gridS:'#2f5577', t1:'#f0a35e', t2:'#9fc1e6', txt:'#9fb4c9', dim:'rgba(159,193,230,0.35)', pass:'rgba(240,163,94,0.16)'};
+
+function setup(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(10, Math.round(r.width*dpr)); cv.height = Math.round(r.height*dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+function grid(g,w,h,nx,ny){
+  g.clearRect(0,0,w,h); g.lineWidth=1;
+  for(let i=0;i<=nx;i++){g.strokeStyle=C.grid; g.beginPath(); const x=Math.round(i*w/nx)+0.5; g.moveTo(x,0); g.lineTo(x,h); g.stroke();}
+  for(let j=0;j<=ny;j++){g.strokeStyle=(j===ny/2)?C.gridS:C.grid; g.beginPath(); const y=Math.round(j*h/ny)+0.5; g.moveTo(0,y); g.lineTo(w,y); g.stroke();}
+}
+function trace(g,pts,color,width,dash){
+  g.strokeStyle=color; g.lineWidth=width; g.setLineDash(dash||[]); g.lineJoin='round'; g.beginPath();
+  pts.forEach((p,i)=> i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.stroke(); g.setLineDash([]);
+}
+function label(g,x,y,s,align){g.fillStyle=C.txt; g.font='13px "IBM Plex Mono", monospace'; g.textAlign=align||'center'; g.fillText(s,x,y);}
+function spikes(g,w,h,items,fmax,amax,color,band){
+  grid(g,w,h,12,4); const base=h-24;
+  if(band){ g.fillStyle=C.pass; g.fillRect(0,0,Math.min(w,band/fmax*w),base); }
+  g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,base+0.5); g.lineTo(w,base+0.5); g.stroke();
+  items.forEach(([f,a,c])=>{ if(f>fmax) return; const x=f/fmax*w; const y=base-(a/amax)*(base-16);
+    g.strokeStyle=c||color; g.lineWidth=5; g.beginPath(); g.moveTo(x,base); g.lineTo(x,y); g.stroke(); });
+  for(let k=0;k<=fmax;k+= (fmax>30?10:(fmax>12?5:2))) label(g,k/fmax*w,h-6,k+' Hz', k===0?'left':'center');
+}
+const fmt = (v,u) => { const a=Math.abs(v); const P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+  if(!isFinite(v)) return '∞'; if(a===0) return '0 '+u; for(const [s,p] of P){ if(a>=s*0.9999) return (+(v/s).toPrecision(4))+' '+p+u; } return v.toExponential(3)+' '+u; };
+
+
+const LC={
+ unipolar:{n:'Unipolar NRZ',f:b=>b.flatMap(c=>c?[1,1]:[0,0])},
+ nrzl:{n:'Polar NRZ-L',f:b=>b.flatMap(c=>c?[-1,-1]:[1,1])},
+ nrzi:{n:'Polar NRZ-I',f:b=>{let l=1;return b.flatMap(c=>{if(c)l=-l;return[l,l];});}},
+ rz:{n:'Polar RZ',f:b=>b.flatMap(c=>c?[1,0]:[-1,0])},
+ man:{n:'Manchester',f:b=>b.flatMap(c=>c?[-1,1]:[1,-1])},
+ dman:{n:'Diff. Manchester',f:b=>{let last=1;return b.flatMap(c=>{const f=c?last:-last;last=-f;return[f,-f];});}},
+ ami:{n:'Bipolar AMI',f:b=>{let p=1;return b.flatMap(c=>{if(c){const r=[p,p];p=-p;return r;}return[0,0];});}},
+ pse:{n:'Pseudoternary',f:b=>{let p=1;return b.flatMap(c=>{if(!c){const r=[p,p];p=-p;return r;}return[0,0];});}},
+ mlt:{n:'MLT-3',f:b=>{const cy=[0,1,0,-1];let i=0;return b.flatMap(c=>{if(c)i=(i+1)%4;return[cy[i],cy[i]];});}},
+ q2:{n:'2B1Q',f:b=>{const m={'10':1,'11':1/3,'01':-1/3,'00':-1},a=b.slice();if(a.length%2)a.push(0);const o=[];for(let k=0;k<a.length;k+=2)o.push(...Array(4).fill(m[''+a[k]+a[k+1]]));return o;}}
+};
+const on=new Set(['nrzl','nrzi','man','dman','ami','mlt']);
+$('lcChecks').innerHTML=Object.entries(LC).map(([k,v])=>`<label class="check"><input type="checkbox" data-k="${k}" ${on.has(k)?'checked':''}> ${v.n}</label>`).join('');
+$('lcChecks').querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{i.checked?on.add(i.dataset.k):on.delete(i.dataset.k);drawLc();}));
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{$('lcB').value=c.dataset.p;drawLc();}));
+const parse=id=>{let s=($(id).value.match(/[01]/g)||['0']).join('').slice(0,40);return s.split('').map(Number);};
+function stats(lv){let tr=0,run=1,mx=1;for(let i=1;i<lv.length;i++){if(lv[i]!==lv[i-1]){tr++;run=1;}else{run++;mx=Math.max(mx,run);}}const dc=lv.reduce((a,b)=>a+b,0)/lv.length;return{tr,mx:mx/2,dc};}
+function wave(g,lv,x0,x1,yc,ys,col,wd){const hw=(x1-x0)/lv.length,p=[];lv.forEach((v,i)=>{p.push([x0+i*hw,yc-v*ys]);p.push([x0+(i+1)*hw,yc-v*ys]);});trace(g,p,col,wd||3);}
+function drawLc(){
+  const b=parse('lcB'),keys=Object.keys(LC).filter(k=>on.has(k)); $('capLc').textContent=b.length+' bits';
+  const {g,w,h}=setup($('lcC')); g.clearRect(0,0,w,h); const L=150,x0=L,x1=w-12,rh=Math.max(60,(h-40)/Math.max(1,keys.length)),bw=(x1-x0)/b.length;
+  g.font='600 14px "IBM Plex Mono", monospace'; g.textAlign='center'; b.forEach((c,i)=>{g.fillStyle=C.t1;g.fillText(c,x0+(i+0.5)*bw,22);});
+  g.setLineDash([3,5]); g.strokeStyle='#2f5577'; for(let i=0;i<=b.length;i++){g.beginPath();g.moveTo(x0+i*bw,30);g.lineTo(x0+i*bw,h-6);g.stroke();} g.setLineDash([]);
+  let rows='<tr><th>Scheme</th><th>Transitions</th><th>Longest flat (bits)</th><th>Average level (DC)</th></tr>';
+  keys.forEach((k,j)=>{const yc=40+rh*(j+0.5),lv=LC[k].f(b); g.strokeStyle='#22405c'; g.beginPath(); g.moveTo(x0,yc); g.lineTo(x1,yc); g.stroke();
+    wave(g,lv,x0,x1,yc,rh*0.32,j%2?C.t2:C.t1,3); g.fillStyle='#f5f3ee'; g.font='600 15px "IBM Plex Sans", sans-serif'; g.textAlign='left'; g.fillText(LC[k].n,10,yc+5);
+    const st=stats(k==='q2'?lv:lv); rows+=`<tr><td>${LC[k].n}</td><td>${st.tr}</td><td>${st.mx}</td><td>${(st.dc>=0?'+':'')+st.dc.toFixed(2)}</td></tr>`;});
+  $('lcT').innerHTML=rows; $('lcT').querySelectorAll('td,th').forEach(c=>{c.style.padding='4px 8px';c.style.textAlign='left';c.style.borderBottom='1px solid var(--line)';});
+}
+$('lcB').addEventListener('input',drawLc);
+const T45={'0000':'11110','0001':'01001','0010':'10100','0011':'10101','0100':'01010','0101':'01011','0110':'01110','0111':'01111','1000':'10010','1001':'10011','1010':'10110','1011':'10111','1100':'11010','1101':'11011','1110':'11100','1111':'11101'};
+const zrun=s=>{let m=0,r=0;for(const c of s){r=c==='0'?r+1:0;m=Math.max(m,r);}return m;};
+function drawBk(){
+  let s=parse('bkB').join(''); while(s.length%4)s+='0'; const groups=s.match(/.{4}/g), out=groups.map(x=>T45[x]).join('');
+  $('rZ0').textContent=zrun(s); $('rZ1').textContent=zrun(out); $('capBk').textContent=s.length+' → '+out.length+' bits';
+  $('bkT').innerHTML='<tr><th>4-bit data</th>'+groups.map(x=>`<td>${x}</td>`).join('')+'</tr><tr><th>5-bit code</th>'+groups.map(x=>`<td><b>${T45[x]}</b></td>`).join('')+'</tr>';
+  $('bkT').querySelectorAll('td,th').forEach(c=>{c.style.padding='4px 8px';c.style.borderBottom='1px solid var(--line)';});
+  const {g,w,h}=setup($('bkC')); g.clearRect(0,0,w,h); const nz=x=>LC.nrzi.f(x.split('').map(Number));
+  wave(g,nz(s),10,10+(w-20)*s.length/out.length,h*0.25,h*0.13,C.t2,3); wave(g,nz(out),10,w-10,h*0.72,h*0.13,C.t1,3);
+  label(g,10,h*0.25-h*0.17,'data (NRZ-I)','left'); label(g,10,h*0.72-h*0.17,'4B/5B coded (NRZ-I)','left');
+}
+$('bkB').addEventListener('input',drawBk);
+function sub(b,kind){const o=[],mk=[];let last=-1,cnt=0,i=0;while(i<b.length){const s=b.slice(i,i+(kind==='b8'?8:4)).join('');
+  if(kind==='b8'&&s==='00000000'){[0,0,0,last,-last,0,-last,last].forEach((v,j)=>{o.push(v,v);mk.push(['','','','V','B','','V','B'][j]);});i+=8;}
+  else if(kind==='h3'&&s==='0000'){if(cnt%2===1){[0,0,0,last].forEach((v,j)=>{o.push(v,v);mk.push(j===3?'V':'');});}else{const bp=-last;[bp,0,0,bp].forEach((v,j)=>{o.push(v,v);mk.push(j===0?'B':(j===3?'V':''));});last=bp;}cnt=0;i+=4;}
+  else if(b[i]===1){last=-last;o.push(last,last);mk.push('');cnt++;i++;} else {o.push(0,0);mk.push('');i++;}}
+  return{o,mk};}
+function drawSc(){
+  const b=parse('scB'); const {g,w,h}=setup($('scC')); g.clearRect(0,0,w,h); const x0=110,x1=w-10,bw=(x1-x0)/b.length;
+  g.font='600 14px "IBM Plex Mono", monospace'; g.textAlign='center'; b.forEach((c,i)=>{g.fillStyle=C.t1;g.fillText(c,x0+(i+0.5)*bw,20);});
+  g.setLineDash([3,5]); g.strokeStyle='#2f5577'; for(let i=0;i<=b.length;i++){g.beginPath();g.moveTo(x0+i*bw,28);g.lineTo(x0+i*bw,h-6);g.stroke();} g.setLineDash([]);
+  const rows=[['AMI',{o:LC.ami.f(b),mk:[]}],['B8ZS',sub(b,'b8')],['HDB3',sub(b,'h3')]];
+  rows.forEach(([nm,r],j)=>{const yc=40+(h-40)*(j+0.5)/3; g.strokeStyle='#22405c'; g.beginPath(); g.moveTo(x0,yc); g.lineTo(x1,yc); g.stroke();
+    wave(g,r.o,x0,x1,yc,(h-40)/3*0.3,j?C.t1:C.t2,3); g.fillStyle='#f5f3ee'; g.font='600 15px "IBM Plex Sans", sans-serif'; g.textAlign='left'; g.fillText(nm,10,yc+5);
+    r.mk.forEach((m,i)=>{ if(m){ g.fillStyle='#f0a35e'; g.font='700 15px "IBM Plex Mono", monospace'; g.textAlign='center'; g.fillText(m,x0+(i+0.5)*bw,yc+(h-40)/3*0.45);} });});
+}
+$('scB').addEventListener('input',drawSc);
+const draws={lc:drawLc,bk:drawBk,sc:drawSc}; let current='lc';
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+  document.querySelectorAll('section.lab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab)); current=b.dataset.tab; draws[current]();}));
+const hash=location.hash.replace('#',''); if(draws[hash]) document.querySelector(`nav button[data-tab="${hash}"]`).click();
+window.addEventListener('resize',()=>draws[current]()); if(document.fonts) document.fonts.ready.then(()=>draws[current]()); draws[current]();
+</script>
+
+</body>
+</html>

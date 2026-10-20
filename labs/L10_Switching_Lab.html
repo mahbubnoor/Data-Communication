@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Switching Lab · Lecture 10</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+:root{
+  --bench:#e9edf1; --panel:#f8f9fa; --ink:#1d2733; --muted:#55606c; --line:#cfd6dd;
+  --screen:#13293f; --grid:#22405c; --gridstrong:#2f5577; --trace:#f0a35e; --trace2:#9fc1e6; --navy:#16324f; --accent:#a64f15;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; } }
+:root[data-theme="dark"]{ --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bench);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;font-size:17px;line-height:1.5}
+header{max-width:1180px;margin:0 auto;padding:28px 20px 8px}
+h1{font-size:30px;line-height:1.2;margin:0 0 4px;font-weight:700;color:var(--navy)}
+header p{margin:0;color:var(--muted);max-width:70ch}
+nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+nav button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:4px 20px 40px}
+section.lab{display:none}
+section.lab.on{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+@media (max-width:880px){section.lab.on{grid-template-columns:1fr}}
+.screens{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scope{background:var(--screen);border-radius:14px;padding:10px 12px 8px;border:6px solid #0c1c2c}
+.scope .cap{display:flex;justify-content:space-between;color:#9fb4c9;font-size:14px;padding:0 4px 6px}
+canvas{display:block;width:100%;height:240px}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.ctrl h2{font-size:19px;margin:0;color:var(--navy)}
+.ctrl p.hint{margin:0;color:var(--muted);font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label span.val{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bench);color:var(--ink);width:100%}
+.readout{background:var(--bench);border-radius:10px;padding:12px 14px;font-size:15px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.readout b{font-weight:600}
+.readout code{font-family:'IBM Plex Mono',monospace;color:var(--accent);text-align:right}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bench);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.verdict{font-weight:700}
+.calcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;grid-column:1/-1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.calc h2{font-size:19px;margin:0;color:var(--navy)}
+.pair{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.result{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--accent)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+.dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
+.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar .slides{background:#a64f15;border-color:#c9752e}
+.dcbar .dis{opacity:.35;pointer-events:none}
+.dcbar .sp{flex:1}
+.dcbar select{max-width:260px}
+@media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L10.html#22">◀ Lecture 10 slides</a><span class="sp"></span><a class="wide" href="L09_Multiplexing_Lab.html">◀ Lab 9</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html">Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html" selected>Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L11_Error_Control_Lab.html">Lab 11 ▶</a></div>
+<header>
+  <h1>Switching Lab</h1>
+  <p>Data Communication, Lecture 10. Time a message through circuit and packet switching, follow datagrams and virtual circuits through switches, and size a switch fabric. Works offline.</p>
+</header>
+<nav role="tablist" aria-label="Experiments">
+  <button role="tab" aria-selected="true" data-tab="time">1. Circuit vs packet</button>
+  <button role="tab" aria-selected="false" data-tab="dg">2. Datagrams</button>
+  <button role="tab" aria-selected="false" data-tab="vc">3. Virtual circuit</button>
+  <button role="tab" aria-selected="false" data-tab="fab">4. Switch fabric</button>
+</nav>
+<main>
+<section class="lab on" id="time" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Circuit switching: setup, then the whole message flows straight through</span><span id="capC"></span></div><canvas id="tcC" style="height:200px"></canvas></div>
+    <div class="scope"><div class="cap"><span>Packet switching: each switch stores a packet, then forwards it (packets pipeline)</span><span id="capP"></span></div><canvas id="tcP" style="height:200px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>Which finishes first?</h2>
+    <label>Message size (kbits)<input type="number" id="tL" value="30" min="1" step="any"></label>
+    <label>Link rate (Mbps)<input type="number" id="tR" value="1" min="0.001" step="any"></label>
+    <label><div class="row">Links on the path <span class="val" id="vTh"></span></div><input type="range" id="tH" min="1" max="6" step="1" value="3"></label>
+    <label>Propagation per link (ms)<input type="number" id="tD" value="2" min="0" step="any"></label>
+    <label>Circuit setup + teardown (ms)<input type="number" id="tS" value="20" min="0" step="any"></label>
+    <label><div class="row">Packets <span class="val" id="vTn"></span></div><input type="range" id="tN" min="1" max="30" step="1" value="5"></label>
+    <label>Waiting time per switch (ms)<input type="number" id="tW" value="0" min="0" step="any"></label>
+    <div class="readout"><b>Circuit total</b><code id="rC"></code><b>Packet total</b><code id="rP"></code><b>Winner</b><code id="rWin"></code></div>
+    <p class="hint">Circuit: setup + L/R + links × propagation. Packet: (N + links − 1) × packet time + links × propagation + waiting. Headers are ignored here.</p>
+  </div>
+</section>
+<section class="lab" id="dg" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Four datagrams from A to X; each switch chooses a route on its own</span><span id="capD"></span></div><canvas id="dgC" style="height:300px"></canvas></div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;overflow-x:auto"><table id="dgT" style="border-collapse:collapse;width:100%;font-size:15px;font-family:'IBM Plex Mono',monospace"></table></div>
+  </div>
+  <div class="ctrl">
+    <h2>Send four datagrams</h2>
+    <label><div class="row">Congestion on the upper path <span class="val" id="vDc"></span></div><input type="range" id="dC" min="0" max="10" step="1" value="5"></label>
+    <button id="dGo" style="font:inherit;font-weight:600;padding:10px 14px;border-radius:10px;border:0;background:var(--navy);color:#fff;cursor:pointer">Send packets 1–4</button>
+    <div class="readout"><b>Arrival order at X</b><code id="rDo"></code><b>Delivered in order?</b><code id="rDi"></code></div>
+    <p class="hint">Datagrams are independent: they can take different paths, see different waiting times and arrive out of order. The transport layer at X puts them back in order.</p>
+  </div>
+</section>
+<section class="lab" id="vc" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>A frame crosses three switches; each swaps the VCI using its table</span><span id="capV"></span></div><canvas id="vcC" style="height:260px"></canvas></div>
+    <div id="vcT" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"></div>
+  </div>
+  <div class="ctrl">
+    <h2>Follow the VCI</h2>
+    <button id="vStep" style="font:inherit;font-weight:600;padding:10px 14px;border-radius:10px;border:0;background:var(--navy);color:#fff;cursor:pointer">Next step</button>
+    <button id="vReset" style="font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bench);cursor:pointer">Restart</button>
+    <p class="verdict" id="vMsg"></p>
+    <p class="hint">A VCI is only meaningful on one link. Each switch looks up (incoming port, incoming VCI) and sends the frame out on a new port with a new VCI. The values match Forouzan's Figures 8.12–8.15.</p>
+  </div>
+</section>
+<section class="lab" id="fab" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Three-stage switch: N/n crossbars (n × k), k crossbars (N/n × N/n), N/n crossbars (k × n)</span><span id="capF"></span></div><canvas id="fbC" style="height:300px"></canvas></div>
+  </div>
+  <div class="ctrl">
+    <h2>How many crosspoints?</h2>
+    <label>Inputs and outputs N<input type="number" id="fN" value="200" min="4" step="1"></label>
+    <label>First-stage group size n<input type="number" id="fn" value="20" min="1" step="1"></label>
+    <label>Middle-stage crossbars k<input type="number" id="fk" value="4" min="1" step="1"></label>
+    <button id="fClos" style="font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bench);cursor:pointer">Use the Clos criterion</button>
+    <div class="readout"><b>Single crossbar N²</b><code id="rF1"></code><b>Three-stage 2kN + k(N/n)²</b><code id="rF2"></code><b>Share of crossbar</b><code id="rF3"></code><b>Blocking?</b><code id="rF4"></code></div>
+    <p class="hint">Example 8.3: N = 200, n = 20, k = 4 → 2,000. Example 8.4 (Clos): n = √(N/2) = 10, k = 2n − 1 = 19 → 15,200, and no blocking.</p>
+  </div>
+</section>
+</main>
+<footer>Timings are simplified for teaching: no headers, acknowledgements or processing delay unless entered as waiting time.</footer>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {grid:'#22405c', gridS:'#2f5577', t1:'#f0a35e', t2:'#9fc1e6', txt:'#9fb4c9', dim:'rgba(159,193,230,0.35)', pass:'rgba(240,163,94,0.16)'};
+
+function setup(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(10, Math.round(r.width*dpr)); cv.height = Math.round(r.height*dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+function grid(g,w,h,nx,ny){
+  g.clearRect(0,0,w,h); g.lineWidth=1;
+  for(let i=0;i<=nx;i++){g.strokeStyle=C.grid; g.beginPath(); const x=Math.round(i*w/nx)+0.5; g.moveTo(x,0); g.lineTo(x,h); g.stroke();}
+  for(let j=0;j<=ny;j++){g.strokeStyle=(j===ny/2)?C.gridS:C.grid; g.beginPath(); const y=Math.round(j*h/ny)+0.5; g.moveTo(0,y); g.lineTo(w,y); g.stroke();}
+}
+function trace(g,pts,color,width,dash){
+  g.strokeStyle=color; g.lineWidth=width; g.setLineDash(dash||[]); g.lineJoin='round'; g.beginPath();
+  pts.forEach((p,i)=> i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.stroke(); g.setLineDash([]);
+}
+function label(g,x,y,s,align){g.fillStyle=C.txt; g.font='13px "IBM Plex Mono", monospace'; g.textAlign=align||'center'; g.fillText(s,x,y);}
+function spikes(g,w,h,items,fmax,amax,color,band){
+  grid(g,w,h,12,4); const base=h-24;
+  if(band){ g.fillStyle=C.pass; g.fillRect(0,0,Math.min(w,band/fmax*w),base); }
+  g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,base+0.5); g.lineTo(w,base+0.5); g.stroke();
+  items.forEach(([f,a,c])=>{ if(f>fmax) return; const x=f/fmax*w; const y=base-(a/amax)*(base-16);
+    g.strokeStyle=c||color; g.lineWidth=5; g.beginPath(); g.moveTo(x,base); g.lineTo(x,y); g.stroke(); });
+  for(let k=0;k<=fmax;k+= (fmax>30?10:(fmax>12?5:2))) label(g,k/fmax*w,h-6,k+' Hz', k===0?'left':'center');
+}
+const fmt = (v,u) => { const a=Math.abs(v); const P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+  if(!isFinite(v)) return '∞'; if(a===0) return '0 '+u; for(const [s,p] of P){ if(a>=s*0.9999) return (+(v/s).toPrecision(4))+' '+p+u; } return v.toExponential(3)+' '+u; };
+
+const COLS=['#f0a35e','#9fc1e6','#8fd19e','#e6a0c4','#f5d76e','#b7a6f0'];
+/* 1 timing */
+function gantt(cv,rows,T,bars,marks){
+  const {g,w,h}=setup(cv); g.clearRect(0,0,w,h); const x0=70,x1=w-12,rh=(h-34)/rows, X=t=>x0+t/T*(x1-x0);
+  for(let r=0;r<rows;r++){const y=8+r*rh; g.strokeStyle=C.grid; g.beginPath(); g.moveTo(x0,y+rh); g.lineTo(x1,y+rh); g.stroke(); label(g,x0-8,y+rh/2+4,'link '+(r+1),'right');}
+  bars.forEach(b=>{g.fillStyle=b.c; g.fillRect(X(b.t0),8+b.r*rh+4,Math.max(1.5,X(b.t1)-X(b.t0)),rh-8); if(b.s&&X(b.t1)-X(b.t0)>18){g.fillStyle='#13293f'; g.font='600 12px "IBM Plex Mono",monospace'; g.textAlign='center'; g.fillText(b.s,(X(b.t0)+X(b.t1))/2,8+b.r*rh+rh/2+4);}});
+  (marks||[]).forEach(m=>{g.strokeStyle='#f5f3ee'; g.setLineDash([4,4]); g.beginPath(); g.moveTo(X(m),4); g.lineTo(X(m),h-24); g.stroke(); g.setLineDash([]);});
+  for(let k=0;k<=5;k++) label(g,X(T*k/5),h-6,(T*k/5).toFixed(1)+' ms');
+}
+function drawTime(){
+  const L=Math.max(+$('tL').value||0,0.001)*1000, R=Math.max(+$('tR').value||0,1e-6)*1e6, H=+$('tH').value, D=+$('tD').value||0, S=+$('tS').value||0, N=+$('tN').value, Wt=+$('tW').value||0;
+  $('vTh').textContent=H; $('vTn').textContent=N;
+  const tx=L/R*1000, circ=S+tx+H*D, pt=tx/N, pack=(N+H-1)*pt+H*D+(H-1)*Wt;
+  $('rC').textContent=circ.toFixed(2)+' ms'; $('rP').textContent=pack.toFixed(2)+' ms'; $('rWin').textContent=circ<pack?'circuit, by '+(pack-circ).toFixed(2)+' ms':(pack<circ?'packet, by '+(circ-pack).toFixed(2)+' ms':'tie');
+  const T=Math.max(circ,pack)*1.05;
+  const cb=[]; for(let r=0;r<H;r++){cb.push({r,t0:0,t1:S,c:'#4a6f93',s:r===0?'setup':''}); const s0=S+r*D; cb.push({r,t0:s0,t1:s0+tx,c:COLS[0],s:'message'});}
+  gantt($('tcC'),H,T,cb,[circ]); $('capC').textContent='total '+circ.toFixed(2)+' ms';
+  const pb=[]; for(let r=0;r<H;r++) for(let k=0;k<N;k++){const t0=(k+r)*pt+r*(D+Wt); pb.push({r,t0,t1:t0+pt,c:COLS[k%COLS.length],s:N<=8?'P'+(k+1):''});}
+  gantt($('tcP'),H,T,pb,[pack]); $('capP').textContent='total '+pack.toFixed(2)+' ms';
+}
+['tL','tR','tH','tD','tS','tN','tW'].forEach(id=>$(id).addEventListener('input',drawTime));
+/* 2 datagrams */
+const NODES={A:[0.06,0.5],S1:[0.25,0.5],S2:[0.5,0.18],S3:[0.5,0.82],S4:[0.75,0.5],X:[0.94,0.5]};
+let dgRun=null;
+function drawDg(){
+  const c=+$('dC').value; $('vDc').textContent=c+' ms extra';
+  const {g,w,h}=setup($('dgC')); g.clearRect(0,0,w,h); const P=n=>[NODES[n][0]*w,NODES[n][1]*h];
+  [['A','S1'],['S1','S2'],['S1','S3'],['S2','S4'],['S3','S4'],['S4','X']].forEach(([a,b])=>trace(g,[P(a),P(b)],C.gridS,3));
+  Object.keys(NODES).forEach(n=>{const [x,y]=P(n); g.fillStyle=n.startsWith('S')?'#16324f':'#a64f15'; g.beginPath(); g.arc(x,y,22,0,7); g.fill(); g.fillStyle='#f5f3ee'; g.font='600 14px "IBM Plex Sans",sans-serif'; g.textAlign='center'; g.fillText(n,x,y+5);});
+  label(g,P('S2')[0],P('S2')[1]-30,'upper path (+'+c+' ms queue)'); label(g,P('S3')[0],P('S3')[1]+38,'lower path (longer link)');
+  if(dgRun){ dgRun.forEach((p,i)=>{const pts=p.path.map(P); const [x,y]=pts[2]; g.fillStyle=COLS[i]; g.fillRect(x-36+i*18,y+(p.path[2]==='S2'?26:-44),16,16); g.fillStyle='#13293f'; g.font='600 11px "IBM Plex Mono"'; g.fillText(i+1,x-28+i*18,y+(p.path[2]==='S2'?38:-32));}); }
+}
+function sendDg(){
+  const c=+$('dC').value; let sd=Math.floor(Math.random()*1e6)+1; const r=()=>{sd=(sd*1103515245+12345)%2147483648; return sd/2147483648;};
+  const pk=[]; for(let i=0;i<4;i++){ const up=r()<0.5; const base=i*1.0; const t=base+(up?2+c*r():6+r()); pk.push({id:i+1,path:['A','S1',up?'S2':'S3','S4','X'],t}); }
+  dgRun=pk; const ord=[...pk].sort((a,b)=>a.t-b.t).map(p=>p.id);
+  $('rDo').textContent=ord.join(', '); const ok=ord.join()==='1,2,3,4'; $('rDi').textContent=ok?'yes (this time)':'no: reorder at X'; $('rDi').style.color=ok?'':css('--accent');
+  let rows='<tr><th>packet</th><th>sent (ms)</th><th>route</th><th>arrives (ms)</th></tr>'; pk.forEach((p,i)=>rows+=`<tr><td>${p.id}</td><td>${i}.0</td><td>${p.path.join(' → ')}</td><td>${p.t.toFixed(1)}</td></tr>`);
+  $('dgT').innerHTML=rows; $('dgT').querySelectorAll('td,th').forEach(e=>{e.style.padding='4px 8px';e.style.textAlign='left';e.style.borderBottom='1px solid var(--line)';});
+  $('capD').textContent='arrival order '+ord.join(' ');
+  drawDg();
+}
+$('dC').addEventListener('input',drawDg); $('dGo').addEventListener('click',sendDg);
+/* 3 virtual circuit */
+const VT=[{n:'Switch 1',inP:1,inV:14,outP:3,outV:66},{n:'Switch 2',inP:1,inV:66,outP:2,outV:22},{n:'Switch 3',inP:2,inV:22,outP:3,outV:77}];
+let vStep=0;
+function drawVc(){
+  const {g,w,h}=setup($('vcC')); g.clearRect(0,0,w,h); const xs=[0.06,0.28,0.5,0.72,0.94].map(x=>x*w), y=h/2;
+  for(let i=0;i<4;i++) trace(g,[[xs[i],y],[xs[i+1],y]],C.gridS,4);
+  ['A','S1','S2','S3','B'].forEach((n,i)=>{g.fillStyle=(i===0||i===4)?'#a64f15':'#16324f'; g.beginPath(); g.arc(xs[i],y,24,0,7); g.fill(); g.fillStyle='#f5f3ee'; g.font='600 14px "IBM Plex Sans"'; g.textAlign='center'; g.fillText(n,xs[i],y+5);});
+  const vcis=[14,66,22,77]; for(let i=0;i<4;i++) label(g,(xs[i]+xs[i+1])/2,y+44,'VCI '+vcis[i]);
+  const pos=Math.min(vStep,4), fx=(xs[pos]+xs[Math.min(pos+1,4)])/2; if(vStep<=3){ g.fillStyle=COLS[0]; g.fillRect(fx-34,y-58,68,32); g.fillStyle='#13293f'; g.font='600 13px "IBM Plex Mono"'; g.fillText('VCI '+vcis[pos],fx,y-37); }
+  else { g.fillStyle=COLS[2]; g.fillRect(xs[4]-34,y-70,68,32); g.fillStyle='#13293f'; g.fillText('arrived',xs[4],y-49); }
+  $('vcT').innerHTML=VT.map((t,i)=>`<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;${vStep-1===i?'outline:3px solid #f0a35e':''}"><b>${t.n}</b><table style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:6px"><tr><th>in port</th><th>in VCI</th><th>out port</th><th>out VCI</th></tr><tr><td>${t.inP}</td><td>${t.inV}</td><td>${t.outP}</td><td>${t.outV}</td></tr></table></div>`).join('');
+  const msgs=['A sends the frame on its link with VCI 14.','Switch 1 finds (port 1, VCI 14) → port 3, VCI 66.','Switch 2 finds (port 1, VCI 66) → port 2, VCI 22.','Switch 3 finds (port 2, VCI 22) → port 3, VCI 77.','B receives the frame. Every frame of this circuit follows the same path.'];
+  $('vMsg').textContent=msgs[Math.min(vStep,4)]; $('capV').textContent='step '+Math.min(vStep,4)+' of 4';
+}
+$('vStep').addEventListener('click',()=>{vStep=Math.min(vStep+1,4); drawVc();}); $('vReset').addEventListener('click',()=>{vStep=0; drawVc();});
+/* 4 fabric */
+function drawFab(){
+  const N=Math.max(4,Math.round(+$('fN').value||4)), n=Math.max(1,Math.round(+$('fn').value||1)), k=Math.max(1,Math.round(+$('fk').value||1)), m=N/n;
+  const one=N*N, three=2*k*N+k*m*m; $('rF1').textContent=one.toLocaleString(); $('rF2').textContent=Number.isInteger(m)?three.toLocaleString():'N must be a multiple of n';
+  $('rF3').textContent=(100*three/one).toFixed(1)+'%'; const nb=k>=2*n-1; $('rF4').textContent=nb?'no (k ≥ 2n − 1, Clos)':'possible (k < 2n − 1 = '+(2*n-1)+')'; $('rF4').style.color=nb?'':css('--accent');
+  $('capF').textContent=m.toFixed(0)+' × ('+n+'×'+k+') · '+k+' × ('+m.toFixed(0)+'×'+m.toFixed(0)+') · '+m.toFixed(0)+' × ('+k+'×'+n+')';
+  const {g,w,h}=setup($('fbC')); g.clearRect(0,0,w,h); const cols=[w*0.18,w*0.5,w*0.82], show=v=>Math.min(v,8);
+  const st=[[show(m),n+'×'+k],[show(k),Math.round(m)+'×'+Math.round(m)],[show(m),k+'×'+n]], boxes=[];
+  st.forEach(([cnt,lab],s)=>{const bh=(h-40)/cnt; const bb=[]; for(let i=0;i<cnt;i++){const y=20+i*bh; g.fillStyle=s===1?'#2f6db5':'#16324f'; g.fillRect(cols[s]-40,y+3,80,bh-6); if(bh>18){g.fillStyle='#f5f3ee'; g.font='600 12px "IBM Plex Mono"'; g.textAlign='center'; g.fillText(lab,cols[s],y+bh/2+4);} bb.push(y+bh/2);} boxes.push(bb);});
+  g.strokeStyle='rgba(159,193,230,0.4)'; g.lineWidth=1; for(let s=0;s<2;s++) boxes[s].forEach(a=>boxes[s+1].forEach(b=>{g.beginPath(); g.moveTo(cols[s]+40,a); g.lineTo(cols[s+1]-40,b); g.stroke();}));
+  if(m>8||k>8) label(g,w/2,h-6,'(at most 8 crossbars drawn per stage)');
+}
+['fN','fn','fk'].forEach(id=>$(id).addEventListener('input',drawFab));
+$('fClos').addEventListener('click',()=>{const N=Math.max(4,+$('fN').value||4); let n=Math.round(Math.sqrt(N/2)); while(N%n) n--; $('fn').value=n; $('fk').value=2*n-1; drawFab();});
+const draws={time:drawTime,dg:drawDg,vc:drawVc,fab:drawFab}; let current='time';
+document.querySelectorAll('nav button[role=tab]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button[role=tab]').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+  document.querySelectorAll('section.lab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab)); current=b.dataset.tab; draws[current]();}));
+const hash=location.hash.replace('#',''); if(draws[hash]) document.querySelector(`nav button[data-tab="${hash}"]`).click();
+window.addEventListener('resize',()=>draws[current]()); if(document.fonts) document.fonts.ready.then(()=>draws[current]()); draws[current]();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARQ Lab · Lecture 12</title>
+<link rel="stylesheet" href="../assets/fonts.css">
+<style>
+:root{
+  --bench:#e9edf1; --panel:#f8f9fa; --ink:#1d2733; --muted:#55606c; --line:#cfd6dd;
+  --screen:#13293f; --grid:#22405c; --gridstrong:#2f5577; --trace:#f0a35e; --trace2:#9fc1e6; --navy:#16324f; --accent:#a64f15;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; } }
+:root[data-theme="dark"]{ --bench:#0f1720; --panel:#17212c; --ink:#e7ecf1; --muted:#a3afbb; --line:#2c3a48; --navy:#9fc1e6; --accent:#f0a35e; }
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bench);color:var(--ink);font-family:'IBM Plex Sans',Arial,sans-serif;font-size:17px;line-height:1.5}
+header{max-width:1180px;margin:0 auto;padding:28px 20px 8px}
+h1{font-size:30px;line-height:1.2;margin:0 0 4px;font-weight:700;color:var(--navy)}
+header p{margin:0;color:var(--muted);max-width:70ch}
+nav{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+nav button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:4px 20px 40px}
+section.lab{display:none}
+section.lab.on{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px}
+@media (max-width:880px){section.lab.on{grid-template-columns:1fr}}
+.screens{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scope{background:var(--screen);border-radius:14px;padding:10px 12px 8px;border:6px solid #0c1c2c}
+.scope .cap{display:flex;justify-content:space-between;color:#9fb4c9;font-size:14px;padding:0 4px 6px}
+canvas{display:block;width:100%;height:240px}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:16px;align-self:start}
+.ctrl h2{font-size:19px;margin:0;color:var(--navy)}
+.ctrl p.hint{margin:0;color:var(--muted);font-size:15px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+label span.val{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--accent)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mono',monospace;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bench);color:var(--ink);width:100%}
+.readout{background:var(--bench);border-radius:10px;padding:12px 14px;font-size:15px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.readout b{font-weight:600}
+.readout code{font-family:'IBM Plex Mono',monospace;color:var(--accent);text-align:right}
+.eq{font-family:'IBM Plex Mono',monospace;font-size:15px;background:var(--bench);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.verdict{font-weight:700}
+.calcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;grid-column:1/-1}
+.calc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.calc h2{font-size:19px;margin:0;color:var(--navy)}
+.pair{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.result{font-family:'IBM Plex Mono',monospace;font-size:20px;color:var(--accent)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+.dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
+.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar .slides{background:#a64f15;border-color:#c9752e}
+.dcbar .dis{opacity:.35;pointer-events:none}
+.dcbar .sp{flex:1}
+.dcbar select{max-width:260px}
+@media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L12.html#34">◀ Lecture 12 slides</a><span class="sp"></span><a class="wide" href="L11_Error_Control_Lab.html">◀ Lab 11</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html">Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html" selected>Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L13_Multiple_Access_Lab.html">Lab 13 ▶</a></div>
+<header>
+  <h1>ARQ Lab</h1>
+  <p>Data Communication, Lecture 12. Send frames over a link that loses some of them. Compare Stop-and-Wait, Go-Back-N and Selective Repeat, work out how busy the link really is, see why the window size has a limit, and build HDLC and PPP fields. Works offline.</p>
+</header>
+<nav role="tablist" aria-label="Experiments">
+  <button role="tab" aria-selected="true" data-tab="sim">1. Sliding windows</button>
+  <button role="tab" aria-selected="false" data-tab="eff">2. Link efficiency</button>
+  <button role="tab" aria-selected="false" data-tab="trap">3. Window-size trap</button>
+  <button role="tab" aria-selected="false" data-tab="hd">4. HDLC &amp; PPP</button>
+</nav>
+<main>
+<section class="lab on" id="sim" role="tabpanel">
+  <div class="screens">
+    <div class="scope"><div class="cap"><span>Sender</span><span id="simTitle"></span><span>Receiver</span></div>
+      <div class="tl" id="tlBox"><svg id="tl" role="img" aria-label="Time diagram of frames and acknowledgements"></svg></div>
+      <div class="legend"><span><i style="background:#f0a35e"></i>frame</span><span><i style="background:#9fc1e6"></i>ACK</span><span><i style="background:#e06c5a"></i>NAK</span><span>✕ lost</span><span>time runs downwards</span></div>
+    </div>
+    <div class="out">
+      <div class="trow2"><h3>Windows at time <span id="tNow" class="acc"></span></h3><input type="range" id="tSl" min="0" max="40" step="0.5" value="0" aria-label="Time"></div>
+      <p class="sm">Sender: <span class="k ack">acknowledged</span> <span class="k out">sent, waiting</span> <span class="k can">may send now</span> <span class="k">outside window</span></p>
+      <div class="strip" id="sWin"></div>
+      <p class="sm">Receiver: <span class="k ack">delivered</span> <span class="k out">stored, waiting for a gap</span> <span class="k can">window: accepts these</span></p>
+      <div class="strip" id="rWin"></div>
+      <p class="sm" id="wTxt"></p>
+    </div>
+    <div class="out"><h3>What happened</h3><ol class="log" id="log"></ol></div>
+  </div>
+  <div class="ctrl">
+    <h2>Lose a frame, watch the recovery</h2>
+    <label>Protocol<select id="pr"><option value="sw">Stop-and-Wait ARQ</option><option value="gbn" selected>Go-Back-N ARQ</option><option value="sr">Selective Repeat ARQ</option></select></label>
+    <label><span class="row">Sequence-number bits m <span class="val" id="mV"></span></span><input type="range" id="m" min="2" max="4" value="3"></label>
+    <label><span class="row">Send window <span class="val" id="wV"></span></span><input type="range" id="w" min="1" max="15" value="4"></label>
+    <label><span class="row">Frames to send <span class="val" id="nV"></span></span><input type="range" id="n" min="3" max="12" value="8"></label>
+    <label><span class="row">Propagation time (frame times) <span class="val" id="tpV"></span></span><input type="range" id="tp" min="1" max="6" value="3"></label>
+    <label><span class="row">Time-out (frame times) <span class="val" id="toV"></span></span><input type="range" id="to" min="4" max="40" value="14"></label>
+    <label>Lose these frames (first copy only)<input type="text" id="lf" value="2"></label>
+    <label>Lose these ACKs (by ACK number)<input type="text" id="la" value=""></label>
+    <div class="presets"><button class="btn" data-p="swLost">S&amp;W: frame lost</button><button class="btn" data-p="swAck">S&amp;W: ACK lost</button><button class="btn" data-p="gbnAck">GBN: ACK 2 lost</button><button class="btn" data-p="gbnF">GBN: frame 3 lost</button><button class="btn" data-p="srF">SR: frame 1 lost</button></div>
+    <div class="readout"><b>Frames transmitted</b><code id="rTx"></code><b>Of which resent</b><code id="rRe"></code><b>Finished at</b><code id="rT"></code><b>Link efficiency</b><code id="rU"></code></div>
+    <p class="hint" id="simHint"></p>
+  </div>
+</section>
+
+<section class="lab" id="eff" role="tabpanel">
+  <div class="screens">
+    <div class="out"><h3>One cycle of Stop-and-Wait vs a full window</h3><svg id="effSvg" role="img" aria-label="Bar showing busy and idle time of the link" viewBox="0 0 700 170"></svg></div>
+    <div class="out"><h3>Working</h3><pre id="effWork"></pre></div>
+  </div>
+  <div class="ctrl">
+    <h2>How busy is the link?</h2>
+    <div class="pair"><label>Data rate<input type="number" id="eR" value="1" min="0.001" step="any"></label><label>&nbsp;<select id="eRu"><option value="1e3">kbps</option><option value="1e6" selected>Mbps</option><option value="1e9">Gbps</option></select></label></div>
+    <label>Frame size (bits)<input type="number" id="eL" value="1000" min="1"></label>
+    <label>One-way propagation time (ms)<input type="number" id="eP" value="10" min="0" step="any"></label>
+    <label>Window size W<input type="number" id="eW" value="15" min="1"></label>
+    <div class="presets"><button class="btn" data-e="f">Forouzan Ex. 11.4/11.5</button><button class="btn" data-e="sat">GEO satellite</button><button class="btn" data-e="lan">1 km fibre, 1 Gbps</button></div>
+    <div class="readout"><b>Stop-and-Wait</b><code id="eSW"></code><b>Window W</b><code id="eWin"></code><b>W for 100%</b><code id="eNeed"></code><b>m (Go-Back-N)</b><code id="eMg"></code><b>m (Sel. Repeat)</b><code id="eMs"></code></div>
+    <p class="hint">a = propagation ÷ transmission time. Utilisation = W ÷ (1 + 2a), at most 100%.</p>
+  </div>
+</section>
+
+<section class="lab" id="trap" role="tabpanel">
+  <div class="screens">
+    <div class="out"><h3>The scenario</h3><p class="mono2" id="trS"></p>
+      <p class="sm">Sequence numbers in time order (the label is the number written in the frame):</p>
+      <div class="strip" id="trSend"></div><p class="sm">sender: <span class="k out">sent, all ACKs lost</span> <span class="k bad">resent after time-out</span></p>
+      <div class="strip" id="trRecv"></div><p class="sm">receiver: <span class="k ack">already delivered</span> <span class="k can">its window now: it accepts these numbers</span></p>
+      <p class="verdict" id="trV"></p></div>
+  </div>
+  <div class="ctrl">
+    <h2>Why the window has a limit</h2>
+    <label>Protocol<select id="tP"><option value="gbn">Go-Back-N</option><option value="sr">Selective Repeat</option></select></label>
+    <label><span class="row">Sequence-number bits m <span class="val" id="tmV"></span></span><input type="range" id="tm" min="2" max="3" value="2"></label>
+    <label><span class="row">Window size <span class="val" id="twV"></span></span><input type="range" id="tw" min="1" max="8" value="4"></label>
+    <div class="readout"><b>Largest safe window</b><code id="tMax"></code></div>
+    <p class="hint">Go-Back-N: window ≤ 2<sup>m</sup> − 1. Selective Repeat: window ≤ 2<sup>m−1</sup>. Push the slider one past the limit and the receiver mistakes an old frame for a new one.</p>
+  </div>
+</section>
+
+<section class="lab" id="hd" role="tabpanel">
+  <div class="screens">
+    <div class="out"><h3>HDLC control field (bit 1 on the left, as sent)</h3><div class="bits big" id="hBits"></div><p class="mono2" id="hDesc"></p>
+      <p class="sm">Whole frame: <span class="k">Flag 01111110</span> <span class="k">Address</span> <span class="k can">Control</span> <span class="k">Information</span> <span class="k">FCS</span> <span class="k">Flag</span></p></div>
+    <div class="out"><h3>PPP byte stuffing (flag 7E, escape 7D)</h3>
+      <p class="sm">Frame: 7E · FF (address) · 03 (control) · protocol · payload · FCS · 7E. Payload bytes in, stuffed bytes out:</p>
+      <p class="sm">Forouzan's simplified rule (insert 7D before 7E or 7D):</p><div class="trow" id="ppF"></div>
+      <p class="sm">Real PPP, RFC 1662 (insert 7D, then XOR the byte with 20):</p><div class="trow" id="ppR"></div>
+      <p class="sm" id="ppN"></p></div>
+  </div>
+  <div class="ctrl">
+    <h2>Build a frame's fields</h2>
+    <label>HDLC frame type<select id="hT"><option value="I">I-frame (data)</option><option value="S">S-frame (supervisory)</option><option value="U">U-frame (unnumbered)</option></select></label>
+    <div class="pair"><label>N(S)<input type="number" id="hNs" value="3" min="0" max="7"></label><label>N(R)<input type="number" id="hNr" value="5" min="0" max="7"></label></div>
+    <label>S-frame code<select id="hS"><option value="00">RR (receive ready)</option><option value="10">RNR (receive not ready)</option><option value="01">REJ (reject, Go-Back-N)</option><option value="11">SREJ (selective reject)</option></select></label>
+    <label>U-frame command<select id="hU"><option value="11P100">SABM (set async. balanced mode)</option><option value="00P110">UA (unnumbered ACK)</option><option value="00P010">DISC (disconnect)</option><option value="00P001">SNRM (set normal response mode)</option><option value="11P000">DM (disconnected mode)</option></select></label>
+    <label class="check"><input type="checkbox" id="hP"> P/F bit = 1</label>
+    <label>…or decode 8 control bits<input type="text" id="hIn" placeholder="e.g. 10010001" maxlength="8"></label>
+    <label>PPP payload bytes (hex)<input type="text" id="ppIn" value="45 7E 00 7D 21"></label>
+    <label class="check"><input type="checkbox" id="ppC"> also escape 00–1F (PPP default before negotiation)</label>
+  </div>
+</section>
+</main>
+<footer>Simulator rules follow Forouzan: ACK n means “I expect frame n next”; Go-Back-N and Selective Repeat use cumulative ACKs, and Selective Repeat sends one NAK per gap. A receiver that gets a duplicate repeats its last ACK.</footer>
+<style>
+.out{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.out h3{margin:0;font-size:16px;color:var(--navy)} .sm{margin:0;font-size:14px;color:var(--muted)} .acc{color:var(--accent);font-family:'IBM Plex Mono',monospace}
+.tl{max-height:560px;overflow-y:auto} #tl{display:block;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:14px;color:#9fb4c9;font-size:13px;padding:6px 4px 0} .legend i{display:inline-block;width:18px;height:4px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.trow2{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between} .trow2 input{flex:1;min-width:180px}
+.strip{display:flex;flex-wrap:wrap;gap:4px}
+.strip span,.k{display:inline-block;min-width:34px;padding:6px 4px;text-align:center;border-radius:7px;font:600 15px 'IBM Plex Mono',monospace;background:var(--bench);color:var(--muted);border:2px solid transparent}
+.k{min-width:0;padding:1px 6px;font:500 13px 'IBM Plex Sans',sans-serif}
+.strip span.ack,.k.ack{background:#c9d1d9;color:#1d2733} .strip span.out,.k.out{background:#f0a35e;color:#1d2733} .strip span.can,.k.can{border-color:var(--navy);color:var(--ink)} .strip span.bad,.k.bad{background:#a64f15;color:#fff}
+.strip span small{display:block;font:400 10px 'IBM Plex Sans',sans-serif;opacity:.75}
+.log{margin:0;padding-left:30px;font-size:14px;max-height:260px;overflow-y:auto} .log li{break-inside:avoid} .log b{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:500}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bench);color:var(--ink);cursor:pointer}
+.btn:focus-visible{outline:3px solid var(--accent)}
+.bits{display:flex;flex-wrap:wrap;gap:4px} .bits span{display:inline-flex;flex-direction:column;align-items:center;min-width:44px;padding:6px 4px;border-radius:7px;font:600 20px 'IBM Plex Mono',monospace;color:#1d2733}
+.bits span small{font:500 11px 'IBM Plex Sans',sans-serif}
+.trow{display:flex;flex-wrap:wrap;gap:5px} .tok{padding:5px 8px;border-radius:7px;background:var(--bench);color:var(--ink);font:600 15px 'IBM Plex Mono',monospace} .tok.e{background:#f0a35e;color:#1d2733} .tok.f{background:#16324f;color:#fff}
+pre{margin:0;font:500 15px/1.45 'IBM Plex Mono',monospace;white-space:pre-wrap;color:var(--ink)} .mono2{margin:0;font:500 15px/1.5 'IBM Plex Mono',monospace;color:var(--ink)}
+footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
+</style>
+<script>
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {grid:'#22405c', gridS:'#2f5577', t1:'#f0a35e', t2:'#9fc1e6', txt:'#9fb4c9', dim:'rgba(159,193,230,0.35)', pass:'rgba(240,163,94,0.16)'};
+
+function setup(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(10, Math.round(r.width*dpr)); cv.height = Math.round(r.height*dpr);
+  const g = cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+function grid(g,w,h,nx,ny){
+  g.clearRect(0,0,w,h); g.lineWidth=1;
+  for(let i=0;i<=nx;i++){g.strokeStyle=C.grid; g.beginPath(); const x=Math.round(i*w/nx)+0.5; g.moveTo(x,0); g.lineTo(x,h); g.stroke();}
+  for(let j=0;j<=ny;j++){g.strokeStyle=(j===ny/2)?C.gridS:C.grid; g.beginPath(); const y=Math.round(j*h/ny)+0.5; g.moveTo(0,y); g.lineTo(w,y); g.stroke();}
+}
+function trace(g,pts,color,width,dash){
+  g.strokeStyle=color; g.lineWidth=width; g.setLineDash(dash||[]); g.lineJoin='round'; g.beginPath();
+  pts.forEach((p,i)=> i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.stroke(); g.setLineDash([]);
+}
+function label(g,x,y,s,align){g.fillStyle=C.txt; g.font='13px "IBM Plex Mono", monospace'; g.textAlign=align||'center'; g.fillText(s,x,y);}
+function spikes(g,w,h,items,fmax,amax,color,band){
+  grid(g,w,h,12,4); const base=h-24;
+  if(band){ g.fillStyle=C.pass; g.fillRect(0,0,Math.min(w,band/fmax*w),base); }
+  g.strokeStyle=C.gridS; g.beginPath(); g.moveTo(0,base+0.5); g.lineTo(w,base+0.5); g.stroke();
+  items.forEach(([f,a,c])=>{ if(f>fmax) return; const x=f/fmax*w; const y=base-(a/amax)*(base-16);
+    g.strokeStyle=c||color; g.lineWidth=5; g.beginPath(); g.moveTo(x,base); g.lineTo(x,y); g.stroke(); });
+  for(let k=0;k<=fmax;k+= (fmax>30?10:(fmax>12?5:2))) label(g,k/fmax*w,h-6,k+' Hz', k===0?'left':'center');
+}
+const fmt = (v,u) => { const a=Math.abs(v); const P=[[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+  if(!isFinite(v)) return '∞'; if(a===0) return '0 '+u; for(const [s,p] of P){ if(a>=s*0.9999) return (+(v/s).toPrecision(4))+' '+p+u; } return v.toExponential(3)+' '+u; };
+
+// ARQ discrete-event simulator: Stop-and-Wait, Go-Back-N, Selective Repeat (Forouzan-style, ACK = next expected)
+function simulate(p){
+  const {proto,N,Tp,TO} = p; const Tt = 1; const W = proto==='sw' ? 1 : p.W;
+  const lostF = new Set(p.lostF||[]), lostA = new Set(p.lostA||[]), lostN = new Set(p.lostN||[]);
+  const sent = new Array(N).fill(0), acked = new Array(N).fill(false), buf = new Array(N).fill(false);
+  const tmr = new Array(N).fill(null);
+  let Sf=0, Sn=0, Rn=0, busy=0, timer=null, nakSent=false, t=0;
+  const rq=[], ev=[], lines=[], log=[], snaps=[];
+  const usedA=new Set(), usedN=new Set();
+  let delivered=[];
+  const snap=()=>snaps.push({t, Sf, Sn, Rn, buf:buf.slice(), acked:acked.slice(), delivered:delivered.slice()});
+  function sendFrame(i){
+    const lost = lostF.has(i) && sent[i]===0; sent[i]++;
+    lines.push({k:'F', i, t0:t, t1:t+Tt+Tp, lost, re:sent[i]>1});
+    if(!lost) ev.push({time:t+Tt+Tp, type:'F', i});
+    log.push([t, `send frame ${i}${sent[i]>1?' (again)':''}${lost?': lost on the way':''}`]);
+    busy = t+Tt;
+    if(proto==='sr') tmr[i]=t+TO; else if(timer===null) timer=t+TO;
+  }
+  function sendCtl(kind,n){
+    let lost=false;
+    if(kind==='A' && lostA.has(n) && !usedA.has(n)){lost=true; usedA.add(n);}
+    if(kind==='N' && lostN.has(n) && !usedN.has(n)){lost=true; usedN.add(n);}
+    lines.push({k:kind, n, t0:t, t1:t+Tp, lost});
+    if(!lost) ev.push({time:t+Tp, type:kind, n});
+    log.push([t, `${kind==='A'?'ACK':'NAK'} ${n} sent${lost?': lost on the way':''}`]);
+  }
+  function rxFrame(i){
+    if(proto!=='sr'){
+      if(i===Rn){ delivered.push(i); Rn++; log.push([t,`frame ${i} arrives: in order, delivered`]); sendCtl('A',Rn); }
+      else if(i<Rn){ log.push([t,`frame ${i} arrives: duplicate, discarded`]); sendCtl('A',Rn); }
+      else { log.push([t,`frame ${i} arrives: expected ${Rn}, discarded`]); }
+      return;
+    }
+    if(i<Rn){ log.push([t,`frame ${i} arrives: duplicate, discarded`]); sendCtl('A',Rn); return; }
+    if(i>=Rn+W){ log.push([t,`frame ${i} arrives: outside the window, discarded`]); return; }
+    if(buf[i]){ log.push([t,`frame ${i} arrives: already stored`]); return; }
+    buf[i]=true;
+    if(i===Rn) log.push([t,`frame ${i} arrives in order`]);
+    if(i!==Rn && !nakSent){ log.push([t,`frame ${i} arrives out of order: stored`]); sendCtl('N',Rn); nakSent=true; }
+    else if(i!==Rn) log.push([t,`frame ${i} arrives out of order: stored`]);
+    let moved=false; while(Rn<N && buf[Rn]){ delivered.push(Rn); Rn++; moved=true; }
+    if(moved){ log.push([t,`deliver up to frame ${Rn-1}`]); sendCtl('A',Rn); nakSent=false; }
+  }
+  function ackTo(n){
+    if(n<=Sf) return false;
+    for(let k=Sf;k<n;k++){acked[k]=true; tmr[k]=null;}
+    Sf=n; for(let j=rq.length-1;j>=0;j--) if(rq[j]<Sf) rq.splice(j,1);
+    if(proto!=='sr') timer = (Sf===Sn) ? null : t+TO;
+    return true;
+  }
+  let guard=0; snap();
+  while(Sf<N && guard++<2000){
+    // candidate times
+    const cand=[];
+    if(ev.length) cand.push(Math.min(...ev.map(e=>e.time)));
+    if(proto!=='sr' && timer!==null) cand.push(timer);
+    if(proto==='sr') tmr.forEach(x=>{ if(x!==null) cand.push(x); });
+    const canSend = rq.length>0 || (Sn<N && Sn<Sf+W);
+    if(canSend) cand.push(Math.max(t,busy));
+    if(!cand.length) break;
+    t = Math.max(t, Math.min(...cand));
+    // 1. arrivals
+    ev.sort((a,b)=>a.time-b.time||(a.type==='F'?-1:1));
+    while(ev.length && ev[0].time<=t+1e-9){
+      const e=ev.shift();
+      if(e.type==='F') rxFrame(e.i);
+      else if(e.type==='A'){ const ok=ackTo(e.n); log.push([t,`ACK ${e.n} arrives${ok?`: frames before ${e.n} confirmed`:': nothing new'}`]); }
+      else { ackTo(e.n); log.push([t,`NAK ${e.n} arrives: resend frame ${e.n}`]); if(e.n<Sn && !acked[e.n] && !rq.includes(e.n)) { rq.unshift(e.n); tmr[e.n]=null; } }
+      snap();
+    }
+    // 2. timers
+    if(proto!=='sr' && timer!==null && timer<=t+1e-9){
+      timer=null; rq.length=0; for(let k=Sf;k<Sn;k++) rq.push(k);
+      log.push([t, proto==='sw' ? `time-out: resend frame ${Sf}` : `time-out: go back to frame ${Sf}, resend ${Sf}–${Sn-1}`]); snap();
+    }
+    if(proto==='sr') for(let k=0;k<N;k++) if(tmr[k]!==null && tmr[k]<=t+1e-9 && !acked[k]){ tmr[k]=null; if(!rq.includes(k)) rq.push(k); log.push([t,`time-out for frame ${k}: resend it`]); snap(); }
+    // 3. send
+    if(t>=busy-1e-9){
+      if(rq.length){ sendFrame(rq.shift()); snap(); }
+      else if(Sn<N && Sn<Sf+W){ sendFrame(Sn); Sn++; snap(); }
+    }
+  }
+  const tx = sent.reduce((a,b)=>a+b,0);
+  const tEnd = Math.max(t, ...lines.map(l=>l.t1));
+  return {lines, log, snaps, tx, tEnd, finish:t, W, N, Tt, Tp};
+}
+
+
+const nums=s=>(s.match(/\d+/g)||[]).map(Number);
+/* ---------------- 1 simulator */
+const P={swLost:{pr:'sw',n:4,tp:2,to:8,lf:'1',la:''},swAck:{pr:'sw',n:4,tp:2,to:8,lf:'',la:'2'},gbnAck:{pr:'gbn',m:3,w:4,n:6,tp:3,to:14,lf:'',la:'2'},
+  gbnF:{pr:'gbn',m:3,w:7,n:10,tp:3,to:14,lf:'3',la:''},srF:{pr:'sr',m:3,w:4,n:8,tp:3,to:16,lf:'1',la:''}};
+let R=null;
+function simParams(){
+  const pr=$('pr').value, m=pr==='sw'?1:+$('m').value, maxW=pr==='sw'?1:(pr==='gbn'?2**m-1:2**(m-1));
+  $('w').max=Math.max(1,maxW); if(+$('w').value>maxW) $('w').value=maxW; $('w').disabled=pr==='sw'; $('m').disabled=pr==='sw';
+  return {proto:pr, m, W:pr==='sw'?1:+$('w').value, N:+$('n').value, Tp:+$('tp').value, TO:+$('to').value, lostF:nums($('lf').value), lostA:nums($('la').value)};
+}
+function runSim(){
+  const p=simParams(); R=simulate(p); R.m=p.m; R.proto=p.proto;
+  $('mV').textContent=p.proto==='sw'?'1: 0, 1, 0, 1 …':p.m+': 0–'+(2**p.m-1); $('wV').textContent=p.W+(p.proto==='sw'?' (always 1)':' (max '+$('w').max+')');
+  $('nV').textContent=p.N; $('tpV').textContent=p.Tp; $('toV').textContent=p.TO;
+  $('simTitle').textContent={sw:'Stop-and-Wait ARQ',gbn:'Go-Back-N ARQ',sr:'Selective Repeat ARQ'}[p.proto];
+  $('rTx').textContent=R.tx; $('rRe').textContent=R.tx-p.N; $('rT').textContent=R.finish+' frame times';
+  $('rU').textContent=(100*p.N/R.finish).toFixed(1)+' %';
+  $('simHint').textContent={sw:'One frame at a time, numbered 0, 1, 0, 1. Lose a frame or an ACK: the timer runs out and the sender repeats the frame. A duplicate is discarded but acknowledged again.',
+    gbn:'Up to W frames in flight. One loss throws away every later frame at the receiver, and the sender goes back and resends them all. A lost ACK is covered by the next one (cumulative ACK).',
+    sr:'The receiver keeps out-of-order frames and asks for the missing one with a NAK. Only the lost frame is resent.'}[p.proto];
+  $('tSl').max=Math.ceil(R.tEnd); if(+$('tSl').value>R.tEnd) $('tSl').value=0;
+  $('log').innerHTML=R.log.map(([t,s])=>`<li><b>t=${t}</b> ${s}</li>`).join('');
+  drawTl(); drawWin();
+}
+function drawTl(){
+  const svg=$('tl'), W=640, xs=150, xr=490, top=24, sc=Math.max(12,Math.min(26,520/R.tEnd)), H=top+R.tEnd*sc+30, lab=n=>n%(2**R.m);
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.height=H+'px';
+  let s=`<text x="28" y="14" fill="#9fb4c9" font-size="12">time</text><line x1="${xs}" y1="${top}" x2="${xs}" y2="${H-10}" stroke="#2f5577" stroke-width="4"/><line x1="${xr}" y1="${top}" x2="${xr}" y2="${H-10}" stroke="#2f5577" stroke-width="4"/>`;
+  for(let k=0;k<=R.tEnd;k+=(R.tEnd>30?5:2)) s+=`<text x="28" y="${top+k*sc+4}" fill="#9fb4c9" font-size="12" text-anchor="start" font-family="IBM Plex Mono">${k}</text>`;
+  R.lines.forEach(l=>{
+    const y0=top+l.t0*sc, y1=top+l.t1*sc, f=l.k==='F', c=f?'#f0a35e':(l.k==='A'?'#9fc1e6':'#e06c5a');
+    let x0=f?xs:xr, x1=f?xr:xs, ex=x1, ey=y1;
+    if(l.lost){ ex=(x0+x1)/2; ey=(y0+y1)/2; }
+    s+=`<line x1="${x0}" y1="${y0}" x2="${ex}" y2="${ey}" stroke="${c}" stroke-width="${f?4:3}" ${l.re?'stroke-dasharray="9 5"':''}/>`;
+    if(l.lost) s+=`<text x="${ex}" y="${ey+8}" fill="#e06c5a" font-size="24" font-weight="700" text-anchor="middle">✕</text>`;
+    else s+=`<circle cx="${x1}" cy="${y1}" r="4" fill="${c}"/>`;
+    const txt=f?`F${lab(l.i)}`:(l.k==='A'?`ACK ${lab(l.n)}`:`NAK ${lab(l.n)}`);
+    s+=`<text x="${f?x0-8:x0+8}" y="${y0+5}" fill="${c}" font-size="14" font-weight="600" text-anchor="${f?'end':'start'}" font-family="IBM Plex Mono">${txt}</text>`;
+  });
+  const T=+$('tSl').value; s+=`<line x1="${xs-60}" y1="${top+T*sc}" x2="${xr+60}" y2="${top+T*sc}" stroke="#ffffff" stroke-opacity=".5" stroke-dasharray="4 4"/>`;
+  svg.innerHTML=s;
+}
+function drawWin(){
+  const T=+$('tSl').value; $('tNow').textContent='t = '+T;
+  let sn=R.snaps[0]; for(const x of R.snaps){ if(x.t<=T+1e-9) sn=x; else break; }
+  const Wr=R.proto==='sr'?R.W:1, lab=n=>n%(2**R.m);
+  let a='',b='';
+  for(let i=0;i<R.N;i++){
+    let c=''; if(sn.acked[i]) c='ack'; else if(i>=sn.Sf && i<sn.Sn) c='out'; else if(i>=sn.Sf && i<sn.Sf+R.W) c='can';
+    a+=`<span class="${c}">${lab(i)}<small>#${i}</small></span>`;
+    let d=''; if(sn.delivered.includes(i)) d='ack'; else if(sn.buf[i]) d='out'; else if(i>=sn.Rn && i<sn.Rn+Wr) d='can';
+    if(sn.buf[i] && !sn.delivered.includes(i)) d='out';
+    b+=`<span class="${d}">${lab(i)}<small>#${i}</small></span>`;
+  }
+  $('sWin').innerHTML=a; $('rWin').innerHTML=b;
+  $('wTxt').textContent=`Sf = ${lab(sn.Sf)} (first outstanding), Sn = ${lab(sn.Sn)} (next to send), send window size ${R.W}; receiver Rn = ${lab(sn.Rn)}, receive window size ${Wr}. Small grey numbers count frames from the start.`;
+  drawTl();
+}
+['pr','m','w','n','tp','to','lf','la'].forEach(id=>$(id).addEventListener('input',runSim));
+$('tSl').addEventListener('input',drawWin);
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{const q=P[b.dataset.p]; for(const k in q) $(k).value=q[k]; $('tSl').value=0; runSim();}));
+/* ---------------- 2 efficiency */
+const E={f:[1,'1e6',1000,10,15],sat:[1,'1e6',8000,270,7],lan:[1,'1e9',12000,0.005,4]};
+function drawEff(){
+  const R_=+$('eR').value*+$('eRu').value, L=+$('eL').value, Tp=+$('eP').value/1000, W=Math.max(1,Math.round(+$('eW').value));
+  if(!(R_>0&&L>0&&Tp>=0)) return;
+  const Tt=L/R_, a=Tp/Tt, cyc=Tt+2*Tp, Usw=1/(1+2*a), Uw=Math.min(1,W/(1+2*a)), need=Math.ceil(1+2*a);
+  let mg=1; while(2**mg-1<need) mg++; let ms=1; while(2**(ms-1)<need) ms++;
+  const pc=u=>(100*u).toPrecision(3)+' %';
+  $('eSW').textContent=pc(Usw); $('eWin').textContent=pc(Uw); $('eNeed').textContent=need+' frames'; $('eMg').textContent=mg+' bits'; $('eMs').textContent=ms+' bits';
+  const bdp=R_*2*Tp;
+  $('effWork').textContent=
+`Transmission time  Tt = L / R = ${L} / ${fmt(R_,'bps')} = ${fmt(Tt,'s')}
+Propagation time   Tp = ${fmt(Tp,'s')}       a = Tp / Tt = ${a.toPrecision(4)}
+One cycle          Tt + 2Tp = ${fmt(cyc,'s')}
+
+Stop-and-Wait      U = 1 / (1 + 2a) = ${pc(Usw)}
+Window of ${W}       U = min(1, W / (1 + 2a)) = ${pc(Uw)}   → throughput ${fmt(Uw*R_,'bps')}
+Full use needs     W ≥ 1 + 2a = ${(1+2*a).toPrecision(4)} → ${need} frames
+Bandwidth × round trip = ${fmt(R_,'bps')} × ${fmt(2*Tp,'s')} = ${fmt(bdp,'bit')}   (Forouzan's quick ratio L / (R·RTT) = ${pc(L/bdp)})`;
+  const x0=20, w=660, scale=w/Math.max(cyc, W*Tt);
+  let s=`<text x="${x0}" y="22" font-size="14" fill="currentColor">Stop-and-Wait: send one frame, then wait for its ACK</text>`;
+  s+=`<rect x="${x0}" y="32" width="${Math.max(2,Tt*scale)}" height="34" fill="#f0a35e"/><rect x="${x0+Tt*scale}" y="32" width="${2*Tp*scale}" height="34" fill="none" stroke="#9aa5b1" stroke-dasharray="5 4"/>`;
+  s+=`<text x="${x0}" y="104" font-size="14" fill="currentColor">Window of ${W}: frames sent back to back during the same cycle</text>`;
+  const fill=Math.min(W*Tt,cyc)*scale; s+=`<rect x="${x0}" y="114" width="${Math.max(2,fill)}" height="34" fill="#f0a35e"/><rect x="${x0}" y="114" width="${cyc*scale}" height="34" fill="none" stroke="#9aa5b1" stroke-dasharray="5 4"/>`;
+  $('effSvg').innerHTML=s; $('effSvg').style.color=css('--ink');
+}
+['eR','eRu','eL','eP','eW'].forEach(id=>$(id).addEventListener('input',drawEff));
+document.querySelectorAll('[data-e]').forEach(b=>b.addEventListener('click',()=>{const v=E[b.dataset.e]; ['eR','eRu','eL','eP','eW'].forEach((id,k)=>$(id).value=v[k]); drawEff();}));
+/* ---------------- 3 trap */
+function drawTrap(){
+  const pr=$('tP').value, m=+$('tm').value, M=2**m; $('tw').max=M+1; const W=Math.min(+$('tw').value,M+1);
+  const Wr=pr==='gbn'?1:W, safe=pr==='gbn'?M-1:M/2; $('tmV').textContent=m+': 0–'+(M-1); $('twV').textContent=W; $('tMax').textContent=safe;
+  $('trS').textContent=`Sender sends frames numbered ${[...Array(W).keys()].map(i=>i%M).join(', ')}. All arrive, but every ACK is lost. The timer runs out and the sender resends its oldest frame, number 0 (old data).`;
+  const tot=Math.max(2*M,W+Wr+1); let a='',b='';
+  for(let i=0;i<tot;i++){ a+=`<span class="${i<W?'out':''}">${i%M}<small>#${i}</small></span>`; b+=`<span class="${i<W?'ack':(i<W+Wr?'can':'')}">${i%M}<small>#${i}</small></span>`; }
+  a+=`<span class="bad">0<small>resent #0</small></span>`;
+  $('trSend').innerHTML=a; $('trRecv').innerHTML=b;
+  const win=[...Array(Wr).keys()].map(k=>(W+k)%M), bad=win.includes(0);
+  const v=$('trV');
+  if(bad){ v.textContent=`Danger: the receiver's window holds number${Wr>1?'s':''} ${win.join(', ')}. It accepts the resent old frame 0 as new frame #${W+win.indexOf(0)}: duplicate data is delivered. Window ${W} is too big for m = ${m}.`; v.style.color=css('--accent'); }
+  else { v.textContent=`Safe: the receiver's window holds ${win.join(', ')}, which does not include 0. The old frame is recognised as a duplicate and discarded (and acknowledged again).`; v.style.color=css('--navy'); }
+}
+['tP','tm','tw'].forEach(id=>$(id).addEventListener('input',drawTrap));
+/* ---------------- 4 HDLC & PPP */
+const b3=n=>(Math.max(0,Math.min(7,n|0))).toString(2).padStart(3,'0');
+const SC={'00':'RR, receive ready (ACK)','10':'RNR, receive not ready','01':'REJ, reject (Go-Back-N NAK)','11':'SREJ, selective reject (Selective Repeat NAK)'};
+const UC={'11P100':'SABM, set asynchronous balanced mode','00P110':'UA, unnumbered acknowledgement','00P010':'DISC, disconnect','00P001':'SNRM, set normal response mode','11P000':'DM, disconnected mode'};
+function hdlcShow(bitsArr){
+  const col=['#cfe0f3','#cfe0f3','#f3d3b3','#f3d3b3','#e6e2f5','#d4ecd9','#d4ecd9','#d4ecd9'];
+  let names, desc, cols;
+  if(bitsArr[0]==='0'){ names=['I','N(S)','N(S)','N(S)','P/F','N(R)','N(R)','N(R)']; cols=['#cfe0f3','#f3d3b3','#f3d3b3','#f3d3b3','#e6e2f5','#d4ecd9','#d4ecd9','#d4ecd9'];
+    const ns=parseInt(bitsArr.slice(1,4).join(''),2), nr=parseInt(bitsArr.slice(5,8).join(''),2);
+    desc=`I-frame: carries data numbered N(S) = ${ns}; piggybacked ACK N(R) = ${nr} ("I expect your frame ${nr} next"); P/F = ${bitsArr[4]}.`; }
+  else if(bitsArr[1]==='0'){ names=['S','S','code','code','P/F','N(R)','N(R)','N(R)']; cols=['#cfe0f3','#cfe0f3','#f3d3b3','#f3d3b3','#e6e2f5','#d4ecd9','#d4ecd9','#d4ecd9'];
+    const code=bitsArr.slice(2,4).join(''), nr=parseInt(bitsArr.slice(5,8).join(''),2); desc=`S-frame, code ${code} = ${SC[code]}; N(R) = ${nr}; P/F = ${bitsArr[4]}. No data field.`; }
+  else { names=['U','U','code','code','P/F','code','code','code']; cols=['#cfe0f3','#cfe0f3','#f3d3b3','#f3d3b3','#e6e2f5','#f3d3b3','#f3d3b3','#f3d3b3'];
+    const key=bitsArr.slice(2,4).join('')+'P'+bitsArr.slice(5,8).join(''); desc=`U-frame: ${UC[key]||'another unnumbered command (code '+key.replace('P',' · ')+')'}; P/F = ${bitsArr[4]}.`; }
+  $('hBits').innerHTML=bitsArr.map((c,i)=>`<span style="background:${cols[i]}">${c}<small>${names[i]}</small></span>`).join('');
+  $('hDesc').textContent=desc;
+}
+function drawHd(src){
+  const inp=($('hIn').value.match(/[01]/g)||[]);
+  if(src==='in' && inp.length===8){ hdlcShow(inp); }
+  else { const t=$('hT').value, p=$('hP').checked?'1':'0'; let s;
+    if(t==='I') s='0'+b3(+$('hNs').value)+p+b3(+$('hNr').value);
+    else if(t==='S') s='10'+$('hS').value+p+b3(+$('hNr').value);
+    else { const u=$('hU').value; s='11'+u.slice(0,2)+p+u.slice(3); }
+    hdlcShow([...s]); if(src!=='in') $('hIn').value=''; }
+  $('hNs').disabled=$('hT').value!=='I'; $('hS').disabled=$('hT').value!=='S'; $('hU').disabled=$('hT').value!=='U'; $('hNr').disabled=$('hT').value==='U';
+  const bytes=($('ppIn').value.match(/[0-9a-fA-F]{1,2}/g)||[]).map(h=>parseInt(h,16)), H=n=>n.toString(16).toUpperCase().padStart(2,'0');
+  const ctl=$('ppC').checked; let f='',r='',nf=0,nr=0;
+  bytes.forEach(x=>{ const sp=(x===0x7E||x===0x7D);
+    if(sp){ f+=`<span class="tok e">7D</span>`; nf++; } f+=`<span class="tok">${H(x)}</span>`;
+    if(sp||(ctl&&x<0x20)){ r+=`<span class="tok e">7D</span><span class="tok e">${H(x^0x20)}</span>`; nr++; } else r+=`<span class="tok">${H(x)}</span>`; });
+  $('ppF').innerHTML=f; $('ppR').innerHTML=r;
+  $('ppN').textContent=`Bytes added: ${nf} (Forouzan) · ${nr} (RFC 1662). In real PPP, 7E is sent as 7D 5E and 7D as 7D 5D, so the byte after the escape never looks like a flag. The receiver removes 7D and XORs the next byte with 20.`;
+}
+['hT','hNs','hNr','hS','hU','hP','ppIn','ppC'].forEach(id=>$(id).addEventListener('input',()=>drawHd('b')));
+$('hIn').addEventListener('input',()=>drawHd('in'));
+/* ---------------- tabs */
+const draws={sim:runSim,eff:drawEff,trap:drawTrap,hd:()=>drawHd('b')}; let current='sim';
+document.querySelectorAll('nav button[role=tab]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('nav button[role=tab]').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));
+  document.querySelectorAll('section.lab').forEach(s=>s.classList.toggle('on',s.id===b.dataset.tab)); current=b.dataset.tab; draws[current]();}));
+runSim(); drawEff(); drawTrap(); drawHd('b');
+const hash=location.hash.replace('#',''); if(draws[hash]) document.querySelector(`nav button[data-tab="${hash}"]`).click();
+</script>
+
+</body>
+</html>
