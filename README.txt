@@ -1,5 +1,5 @@
 DATA COMMUNICATION COURSE SITE
-Md Mahbub E Noor, Department of CSE, University of Barishal
+Md Mahbub E Noor, Faculty member, Department of CSE, University of Barishal
 
 OPEN IT
   Double-click index.html. Everything (slides, labs, videos, fonts) is inside
