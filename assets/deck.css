@@ -1,0 +1,52 @@
+/* Data Communication course: HTML slide viewer */
+:root{--bar:#16324f;--bar2:#21456b;--ink:#f5f3ee;--accent:#f0a35e;--muted:#9fb4c9;--sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0d1620;overflow:hidden}
+body{font-family:var(--sans);color:var(--ink)}
+/* ---------- top bar ---------- */
+#bar{position:fixed;left:0;right:0;top:0;height:52px;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--bar);z-index:20;transition:transform .25s ease;border-bottom:1px solid #0b1a2a}
+body.fs.idle #bar{transform:translateY(-100%)}
+#bar a,#bar button,#bar select{font:600 14px var(--sans);color:var(--ink);background:var(--bar2);border:1px solid #2d5680;border-radius:8px;height:34px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;cursor:pointer;white-space:nowrap}
+#bar a:hover,#bar button:hover,#bar select:hover{border-color:var(--accent)}
+#bar :focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+#bar .lab{background:#a64f15;border-color:#c9752e}
+#bar .dis{opacity:.35;pointer-events:none}
+#bar select{max-width:330px;padding-right:8px}
+#bar .count{font:600 14px 'IBM Plex Mono',ui-monospace,monospace;color:var(--muted);min-width:76px;text-align:center;font-variant-numeric:tabular-nums}
+#bar .sp{flex:1}
+#bar .grp{display:flex;gap:6px;align-items:center}
+/* ---------- slide area ---------- */
+#view{position:fixed;left:0;right:0;top:52px;bottom:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+body.fs #view{top:0}
+#stage{width:1920px;height:1080px;flex:none;transform-origin:center center;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.45)}
+#stage>section{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden}
+#stage>section.off{display:none!important}
+/* ---------- reproduce the Slides format defaults ---------- */
+#stage section *{box-sizing:border-box}
+#stage section h1,#stage section h2,#stage section h3,#stage section p,#stage section ul,#stage section ol,#stage section table{margin:0}
+#stage section h1{font-size:96px;font-weight:600;line-height:1.1}
+#stage section h2{font-size:64px;font-weight:600;line-height:1.15}
+#stage section h3{font-size:44px;font-weight:600;line-height:1.2}
+#stage section p{font-size:32px;line-height:1.4}
+#stage section ul{list-style-type:disc;padding-inline-start:1.2em}
+#stage section ol{padding-inline-start:1.4em}
+#stage section table{border-collapse:collapse}
+#stage section a{color:#2f6db5}
+#stage section img,#stage section video,#stage section svg{display:block}
+#stage section video{background:#0f1a29}
+#stage section iframe.embed{border:0;display:block;background:transparent}
+/* ---------- notes and end card ---------- */
+#notes{position:fixed;left:12px;right:12px;bottom:12px;max-height:34vh;overflow:auto;background:rgba(13,22,32,.96);border:1px solid #2d5680;border-radius:12px;padding:14px 18px;font-size:16px;line-height:1.5;white-space:pre-wrap;z-index:25;color:#e6ebf0}
+#notes b{color:var(--accent);display:block;margin-bottom:6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+#endcard{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,14,20,.72);z-index:30}
+#endcard div{background:#f5f3ee;color:#1d2733;border-radius:16px;padding:28px 32px;max-width:520px;width:calc(100% - 32px);display:flex;flex-direction:column;gap:14px}
+#endcard h2{margin:0;font-size:24px;color:#16324f}
+#endcard p{margin:0;color:#5b6672}
+#endcard .row{display:flex;gap:10px;flex-wrap:wrap}
+#endcard a,#endcard button{font:600 15px var(--sans);padding:10px 16px;border-radius:10px;border:1px solid #cfd6dd;background:#e7edf3;color:#1d2733;text-decoration:none;cursor:pointer}
+#endcard a.go{background:#a64f15;color:#f5f3ee;border-color:#a64f15}
+#help{position:fixed;right:12px;top:64px;z-index:26;background:#f5f3ee;color:#1d2733;border-radius:12px;padding:16px 20px;font-size:14px;line-height:1.7;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#help kbd{font:600 12px 'IBM Plex Mono',monospace;background:#e7edf3;border:1px solid #cfd6dd;border-radius:4px;padding:1px 6px}
+@media (max-width:860px){#bar .wide{display:none}#bar select{max-width:150px}}
+#bar select{min-width:60px;flex:0 1 auto}
+@media (max-width:560px){#bar .mid{display:none}#bar{gap:4px;padding:0 6px}#bar select{max-width:110px}#bar a,#bar button{padding:0 9px}#bar .count{min-width:54px;font-size:12px}}
