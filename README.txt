@@ -1,5 +1,5 @@
 DATA COMMUNICATION COURSE SITE
-Md Mahbub E Noor, Faculty member, Department of CSE, University of Barishal
+Md Mahbub E Noor, Department of CSE, University of Barishal
 
 OPEN IT
   Double-click index.html. Everything (slides, labs, videos, fonts) is inside
@@ -26,6 +26,11 @@ INTERACTIVE SLIDES (website only): 49 in total, marked "Interactive" next to the
   Arrow keys move a slider while it is selected; press Esc (or click the
   slide background) to go back to arrow-key slide changes. A presenter
   clicker (Page Down / Page Up) always changes slides.
+
+LIGHT / DARK
+  The course home page and the labs follow the computer's light/dark setting.
+  The "Dark"/"Light" button (top right) overrides it; the choice is remembered
+  in that browser and shared by all pages. The slides themselves stay light.
 
 FOLDERS
   index.html   course home

@@ -54,19 +54,20 @@ input[type=text],input[type=number],select{font:inherit;font-family:'IBM Plex Mo
 footer{max-width:1180px;margin:0 auto;padding:0 20px 32px;color:var(--muted);font-size:14px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
+<script src="../assets/theme.js"></script>
 </head>
 <body>
 <style>
 .dcbar{position:sticky;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#16324f;font:600 14px 'IBM Plex Sans',system-ui,'Segoe UI',Arial,sans-serif;border-bottom:1px solid #0b1a2a}
-.dcbar a,.dcbar select{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
-.dcbar a:hover,.dcbar select:hover{border-color:#f0a35e}
-.dcbar a:focus-visible,.dcbar select:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
+.dcbar a,.dcbar select,.dcbar button{font:inherit;color:#f5f3ee;background:#21456b;border:1px solid #2d5680;border-radius:8px;height:32px;padding:0 11px;display:inline-flex;align-items:center;text-decoration:none;white-space:nowrap;cursor:pointer}
+.dcbar a:hover,.dcbar select:hover,.dcbar button:hover{border-color:#f0a35e}
+.dcbar a:focus-visible,.dcbar select:focus-visible,.dcbar button:focus-visible{outline:3px solid #f0a35e;outline-offset:1px}
 .dcbar .slides{background:#a64f15;border-color:#c9752e}
 .dcbar .dis{opacity:.35;pointer-events:none}
 .dcbar .sp{flex:1}
 .dcbar select{max-width:260px}
 @media (max-width:620px){.dcbar .wide{display:none}.dcbar select{max-width:140px}}
-</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L09.html#23">◀ Lecture 9 slides</a><span class="sp"></span><a class="wide" href="L08_Analog_Modulation_Lab.html">◀ Lab 8</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html" selected>Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L10_Switching_Lab.html">Lab 10 ▶</a></div>
+</style><div class="dcbar" role="navigation" aria-label="Course navigation"><a href="../index.html" title="Course home">⌂<span class="wide">&nbsp;Course</span></a><a class="slides" href="../lectures/L09.html#23">◀ Lecture 9 slides</a><span class="sp"></span><a class="wide" href="L08_Analog_Modulation_Lab.html">◀ Lab 8</a><select aria-label="Go to lab" onchange="location.href=this.value"><option value="L02_Signal_Lab.html">Lab 2: Signal Lab</option><option value="L03_Channel_Lab.html">Lab 3: Channel Lab</option><option value="L04_Media_Lab.html">Lab 4: Media Lab</option><option value="L05_PCM_Lab.html">Lab 5: PCM Lab</option><option value="L06_Line_Coding_Lab.html">Lab 6: Line Coding Lab</option><option value="L07_Modulation_Lab.html">Lab 7: Modulation Lab</option><option value="L08_Analog_Modulation_Lab.html">Lab 8: Analog Modulation Lab</option><option value="L09_Multiplexing_Lab.html" selected>Lab 9: Multiplexing Lab</option><option value="L10_Switching_Lab.html">Lab 10: Switching Lab</option><option value="L11_Error_Control_Lab.html">Lab 11: Error Control Lab</option><option value="L12_ARQ_Lab.html">Lab 12: ARQ Lab</option><option value="L13_Multiple_Access_Lab.html">Lab 13: Multiple Access Lab</option><option value="L14_Wireless_Lab.html">Lab 14: Wireless Lab</option></select><a class="wide" href="L10_Switching_Lab.html">Lab 10 ▶</a><button type="button" class="theme" data-theme-toggle aria-label="Switch light or dark theme">☾ Dark</button></div>
 <header>
   <h1>Multiplexing Lab</h1>
   <p>Data Communication, Lecture 9. Share one link among many signals with FDM and TDM, compare synchronous and statistical TDM, and spread a signal with FHSS and DSSS. Works offline.</p>
