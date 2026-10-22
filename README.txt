@@ -1,4 +1,4 @@
-DATA COMMUNICATION COURSE SITE
+DATA COMMUNICATION COURSE SITE (https://mahbubnoor.github.io/Data-Communication/)
 Md Mahbub E Noor, Department of CSE, University of Barishal
 
 OPEN IT
