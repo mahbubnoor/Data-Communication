@@ -31,7 +31,7 @@ The site has 14 lectures, 13 interactive labs, 14 explainer videos and 60 intera
 
 ### Open it
 
-Double-click `index.html`. Everything the site needs is inside this folder: slides, labs, videos and fonts. It works on lab PCs with no internet.
+Double-click `index.html` or [here](https://mahbubnoor.github.io/Data-Communication/). Everything the site needs is inside this folder: slides, labs, videos and fonts. It works on lab PCs with no internet.
 
 ### Put it on the web
 
