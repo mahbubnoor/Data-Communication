@@ -39,3 +39,9 @@ THE SOFTWARE.
 - Used: four icon shapes (activity, check-circle, clock, send), drawn inline in Lecture 1
 - Copyright (c) 2013-2017 Cole Bemis
 - License: MIT (the same terms as above)
+
+## Sample photographs (Lecture 2, "an image is a signal too")
+
+- Embedded in: `assets/widgets/spatial.js` (256 × 256 greyscale copies)
+- "camera" by Lav Varshney and "coffee" by Rachel Michetti, from the scikit-image sample data
+- License: CC0 (no copyright restrictions)
