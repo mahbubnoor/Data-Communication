@@ -2,7 +2,7 @@ DATA COMMUNICATION COURSE SITE
 Md Mahbub E Noor, Department of CSE, University of Barishal
 
 OPEN IT
-  Double-click index.html or [here](https://mahbubnoor.github.io/Data-Communication/). Everything (slides, labs, videos, fonts) is inside
+  Double-click index.html. Everything (slides, labs, videos, fonts) is inside
   this folder, so it works on lab PCs with no internet.
 
 PUT IT ON THE WEB
@@ -20,7 +20,7 @@ SPEAKER NOTES AND CHECKPOINT ANSWERS
   For a public, student-facing site, DELETE the notes folder before uploading:
   the decks work the same, and the Notes button simply disappears.
 
-INTERACTIVE SLIDES (website only): 58 in total, marked "Interactive" next to the
+INTERACTIVE SLIDES (website only): 60 in total, marked "Interactive" next to the
   slide title. Lectures 1-14 each have at least one. Each has demo steps in its
   speaker notes (press N).
   Arrow keys move a slider while it is selected; press Esc (or click the
