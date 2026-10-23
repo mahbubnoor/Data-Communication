@@ -2,7 +2,7 @@ DATA COMMUNICATION COURSE SITE
 Md Mahbub E Noor, Department of CSE, University of Barishal
 
 OPEN IT
-  Double-click index.html. Everything (slides, labs, videos, fonts) is inside
+  Double-click index.html or here->(https://mahbubnoor.github.io/Data-Communication/ ) Everything (slides, labs, videos, fonts) is inside
   this folder, so it works on lab PCs with no internet.
 
 PUT IT ON THE WEB
