@@ -142,14 +142,15 @@
               g.fillStyle = b.kind === 'd' ? C.ink : '#fbf6ef'; g.font = '600 22px ' + D.SANS; g.textAlign = 'center';
               g.fillText(b.k, x + w / 2, yy + bh / 2 + 8);
             }
-            g.fillStyle = b.kind === 'd' ? C.gray : C.ink; g.font = '500 20px ' + D.MONO; g.textAlign = 'center';
-            g.fillText(st.model === 7 && b.kind !== 'd' ? String(b.b) : b.b + ' B', x + w / 2, by + bh + 22);
+            g.fillStyle = b.kind === 'd' ? C.gray : C.ink; g.font = '500 ' + (st.model === 7 && b.kind !== 'd' ? 18 : 20) + 'px ' + D.MONO; g.textAlign = 'center';
+            g.fillText(b.b + ' B', x + w / 2, by + bh + 22);
             x += w + 3;
           });
           g.textAlign = 'right'; g.font = '600 22px ' + D.MONO; g.fillStyle = C.ink;
           g.fillText(P.total + ' B', cx1, by + bh / 2 - 2);
-          g.font = '500 20px ' + D.MONO; g.fillStyle = P.over ? C.orange : C.gray;
-          g.fillText(D.fmtN(P.pct, 1) + '% ovh', cx1, by + bh / 2 + 24);
+          var cut = (L[i].hd ? L[i].hd.b : 0) + (L[i].tr ? L[i].tr.b : 0);
+          if (rxCur && cut) { g.font = '600 20px ' + D.MONO; g.fillStyle = C.green; g.fillText('→ ' + (P.total - cut) + ' B', cx1, by + bh / 2 + 24); }
+          else { g.font = '500 20px ' + D.MONO; g.fillStyle = P.over ? C.orange : C.gray; g.fillText(D.fmtN(P.pct, 1) + '% ovh', cx1, by + bh / 2 + 24); }
         }
         if (rxDone && !rxCur) { g.fillStyle = C.green; g.font = '700 24px ' + D.SANS; g.textAlign = 'right'; g.fillText('✓', sx1 + sw - 8, y + 30); }
         g.globalAlpha = 1;
@@ -195,7 +196,7 @@
           t += '<b>Receiver · ' + cur.n + '</b>\n';
           if (removed.length) {
             t += 'Reads and removes ' + removed.map(function (x) { return x.k; }).join(' and ') + '\n';
-            t += 'passes up ' + Pc.total + ' − ' + removed.reduce(function (a, x) { return a + x.b; }, 0) + ' = <b>' + (below ? below.total : st.data) + ' B</b>\n';
+            t += (below ? 'passes up ' : 'delivers ') + Pc.total + ' − ' + removed.reduce(function (a, x) { return a + x.b; }, 0) + ' = <b>' + (below ? below.total : st.data) + ' B</b>' + (below ? '' : ', same as sent') + '\n';
           } else t += 'Gets the message: <b>' + st.data + ' B</b>, same as sent\n';
         }
         if (Pc.over) t += 'overhead = ' + Pc.over + ' / ' + Pc.total + ' = <b>' + D.fmtN(Pc.pct, 1) + '%</b>';
