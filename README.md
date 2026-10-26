@@ -6,7 +6,7 @@ Course website for **Data Communication** (BSc, 2nd Year, 2nd Semester), Departm
 
 Reference text: Forouzan, *Data Communications and Networking*, 5th edition.
 
-The site has 14 lectures, 13 interactive labs, 14 explainer videos and 60 interactive slides. It is fully self-contained and works offline: open `index.html` in any browser.
+The site has 14 lectures, 13 interactive labs, 14 explainer videos and 60 interactive slides. It is fully self-contained and works offline: open `index.html` or [click here](https://mahbubnoor.github.io/Data-Communication/) in any browser.
 
 ## Contents
 
