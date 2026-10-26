@@ -33,16 +33,6 @@ The site has 14 lectures, 13 interactive labs, 14 explainer videos and 60 intera
 
 Double-click `index.html` or [here](https://mahbubnoor.github.io/Data-Communication/). Everything the site needs is inside this folder: slides, labs, videos and fonts. It works on lab PCs with no internet.
 
-### Put it on the web
-
-Upload the whole folder unchanged to any static web host:
-
-- a university web server (copy the folder into the public web directory)
-- GitHub Pages (see [GitHub Pages](#github-pages) below)
-- Netlify or Cloudflare Pages (drag the folder onto the upload page)
-
-No server code or database is needed. When the site is served from a web address, the QR code on each lab slide points to that server's copy of the lab, so students can scan it.
-
 ### Interactive slides
 
 The 60 slides marked **Interactive** next to their title work on the website only; they do not work in PowerPoint. Every lecture has at least one, and each has demo steps in its speaker notes.
@@ -64,9 +54,6 @@ The 60 slides marked **Interactive** next to their title work on the website onl
 ### Speaker notes and checkpoint answers
 
 The `notes/` folder holds the speaker notes, including checkpoint answers. In a lecture, press <kbd>N</kbd> or the **Notes** button to show them.
-
-> [!WARNING]
-> On a public, student-facing site, **delete the `notes/` folder** before uploading. The decks work the same without it; the Notes button simply disappears.
 
 ### Light and dark theme
 
