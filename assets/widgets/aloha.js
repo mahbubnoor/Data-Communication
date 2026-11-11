@@ -123,7 +123,7 @@
         'survive/s = S / T<sub>fr</sub> = S × 1000';
       var bookP = fps * sp, bookS = fps * ss;
       note.textContent = G === 1 ? 'At G = 1 the book\'s "rate × S" happens to give the right count.' :
-        'Book/slide multiply S by ' + fmtN(fps, 0) + ' frames/s (' + fmtN(bookP, 0) + ' and ' + fmtN(bookS, 0) + '): wrong unless G = 1. S counts frames per frame time.';
+        'The book multiplies S by ' + fmtN(fps, 0) + ' frames/s (' + fmtN(bookP, 0) + ' and ' + fmtN(bookS, 0) + '): wrong unless G = 1. S counts frames per frame time.';
       var Sm = st.mode === 'pure' ? sp : ss, peak = st.mode === 'pure' ? 0.5 : 1;
       if (Math.abs(G - peak) < 0.13) { verdict.className = 'w-verdict ok'; verdict.textContent = 'Near the best load: ' + (Sm * 100).toFixed(1) + '% of the channel carries good frames.'; }
       else if (G < peak) { verdict.className = 'w-verdict warn'; verdict.textContent = 'Light load: few collisions, but the channel is mostly idle.'; }

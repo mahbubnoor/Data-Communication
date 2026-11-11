@@ -314,7 +314,7 @@
       for (var v = -Math.floor(L); v <= Math.floor(L); v += step) { if (!v) continue; g.beginPath(); g.moveTo(px(v), 10); g.lineTo(px(v), con.h - 10); g.stroke(); g.beginPath(); g.moveTo(10, py(v)); g.lineTo(con.w - 10, py(v)); g.stroke(); }
       g.strokeStyle = C.gray; g.lineWidth = 2; g.beginPath(); g.moveTo(10, py(0)); g.lineTo(con.w - 10, py(0)); g.moveTo(px(0), 10); g.lineTo(px(0), con.h - 10); g.stroke();
       g.fillStyle = C.gray; g.font = '600 22px ' + SANS; g.textAlign = 'right'; g.fillText('I', con.w - 14, py(0) - 10); g.textAlign = 'left'; g.fillText('Q', px(0) + 10, 30);
-      g.font = '500 18px ' + MONO; g.fillStyle = C.gray;
+      g.font = '500 20px ' + MONO; g.fillStyle = C.gray;
       if (st.M >= 16) [-Math.floor(L), Math.floor(L)].forEach(function (t) { if (st.M === 64 && t % 2 === 0) t += t > 0 ? -1 : 1; g.textAlign = 'center'; g.fillText((t > 0 ? '+' : '−') + Math.abs(t), px(t), py(0) + 24); });
       cloud.forEach(function (p) { g.fillStyle = p.ok ? 'rgba(47,109,181,.35)' : 'rgba(192,57,43,.7)'; g.beginPath(); g.arc(px(p.I), py(p.Q), st.M === 64 ? 2.5 : 3.5, 0, 7); g.fill(); });
       // vector to the shown point
@@ -368,7 +368,7 @@
         trace(function (s, t) { return -s.Q * Math.sin(2 * Math.PI * cyc * t); }, 'rgba(63,143,90,.6)', 2);
       }
       trace(function (s, t) { return s.I * Math.cos(2 * Math.PI * cyc * t) - s.Q * Math.sin(2 * Math.PI * cyc * t); }, C.navy, 3);
-      w.font = '500 18px ' + SANS; w.textAlign = 'right'; w.fillStyle = C.gray;
+      w.font = '500 20px ' + SANS; w.textAlign = 'right'; w.fillStyle = C.gray;
       w.fillText(st.iq ? 'navy: s(t) = I·cos(2πfct) − Q·sin(2πfct) · blue: I·cos · green: −Q·sin' : 's(t) = A cos(2πfct + φ), 2 carrier cycles per symbol', x1 - 4, wh - 10);
       // ---- detail
       var lab = st.pick ? 'Point ' + show.bits + ' (not in the message)' : 'Symbol ' + st.cur + ' of ' + n;
@@ -594,7 +594,7 @@
       g.font = '600 24px ' + SANS; g.fillStyle = C.navy; g.textAlign = 'center'; g.fillText('Sender', sx, 38); g.fillText('Receiver', rx, 38);
       g.strokeStyle = C.navy; g.lineWidth = 4; g.beginPath(); g.moveTo(sx, top - 8); g.lineTo(sx, hh - bot); g.moveTo(rx, top - 8); g.lineTo(rx, hh - bot); g.stroke();
       // time ticks
-      g.font = '500 18px ' + MONO; g.fillStyle = C.gray; g.textAlign = 'right';
+      g.font = '500 20px ' + MONO; g.fillStyle = C.gray; g.textAlign = 'right';
       var tick = R.tEnd > 40 ? 10 : 5;
       for (var t = 0; t <= R.tEnd + 1e-9; t += tick) { g.fillText(t, sx - 26, Y(t) + 6); g.strokeStyle = C.grid; g.lineWidth = 1; g.beginPath(); g.moveTo(sx - 18, Y(t)); g.lineTo(sx, Y(t)); g.stroke(); }
       g.save(); g.translate(30, (top + hh) / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText('time (frame times) ↓', 0, 0); g.restore();

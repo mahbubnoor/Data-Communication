@@ -33,7 +33,7 @@
 .w-tab tr.cur td{background:#fbe9da}
 .w-bits{display:flex;gap:8px;flex-wrap:wrap}
 .w-bit{width:52px;height:72px;border-radius:10px;border:2px solid #cfd6dd;background:#fff;font:600 34px 'IBM Plex Mono',monospace;color:#1d2733;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0;line-height:1}
-.w-bit small{font:500 18px 'IBM Plex Sans',Arial,sans-serif;color:#5b6672;margin-top:4px}
+.w-bit small{font:500 20px 'IBM Plex Sans',Arial,sans-serif;color:#5b6672;margin-top:4px}
 .w-bit.chk{background:#e7edf3}
 .w-bit.err{background:#c0392b;border-color:#c0392b;color:#fff}.w-bit.err small{color:#fde2de}
 .w-bit.fix{background:#3f8f5a;border-color:#3f8f5a;color:#fff}.w-bit.fix small{color:#dff2e5}

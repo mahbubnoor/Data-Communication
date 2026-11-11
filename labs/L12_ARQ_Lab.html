@@ -339,8 +339,8 @@ function runSim(){
 function drawTl(){
   const svg=$('tl'), W=640, xs=150, xr=490, top=24, sc=Math.max(12,Math.min(26,520/R.tEnd)), H=top+R.tEnd*sc+30, lab=n=>n%(2**R.m);
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.height=H+'px';
-  let s=`<text x="28" y="14" fill="#9fb4c9" font-size="12">time</text><line x1="${xs}" y1="${top}" x2="${xs}" y2="${H-10}" stroke="#2f5577" stroke-width="4"/><line x1="${xr}" y1="${top}" x2="${xr}" y2="${H-10}" stroke="#2f5577" stroke-width="4"/>`;
-  for(let k=0;k<=R.tEnd;k+=(R.tEnd>30?5:2)) s+=`<text x="28" y="${top+k*sc+4}" fill="#9fb4c9" font-size="12" text-anchor="start" font-family="IBM Plex Mono">${k}</text>`;
+  let s=`<text x="28" y="14" fill="#9fb4c9" font-size="14">time</text><line x1="${xs}" y1="${top}" x2="${xs}" y2="${H-10}" stroke="#2f5577" stroke-width="4"/><line x1="${xr}" y1="${top}" x2="${xr}" y2="${H-10}" stroke="#2f5577" stroke-width="4"/>`;
+  for(let k=0;k<=R.tEnd;k+=(R.tEnd>30?5:2)) s+=`<text x="28" y="${top+k*sc+4}" fill="#9fb4c9" font-size="14" text-anchor="start" font-family="IBM Plex Mono">${k}</text>`;
   R.lines.forEach(l=>{
     const y0=top+l.t0*sc, y1=top+l.t1*sc, f=l.k==='F', c=f?'#f0a35e':(l.k==='A'?'#9fc1e6':'#e06c5a');
     let x0=f?xs:xr, x1=f?xr:xs, ex=x1, ey=y1;
